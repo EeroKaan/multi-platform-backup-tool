@@ -1,9 +1,9 @@
 /**
- * 2020 Eero Kaan
+ * 2021 Eero Kaan
  * https://eerokaan.de/
  *
  *  @author    Eero Kaan <eero@eerokaan.de>
- *  @copyright 2020 Eero Kaan
+ *  @copyright 2021 Eero Kaan
  */
 
 package de.eerokaan.mpbt;
@@ -16,13 +16,13 @@ public class Startup {
         //Check OS
         if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
             ConsoleOutput.print("error", StatusMessages.OS_NOT_SUPPORTED);
-            System.exit(0);
+            System.exit(1);
         }
 
         //CLI Parsing
-        Option optionBackup = Option.builder("b")
-            .longOpt("backup")
-            .desc("Start a Backup job")
+        Option optionHelp = Option.builder("h")
+            .longOpt("help")
+            .desc("Display help documentation")
             .hasArg(false)
             .build();
         Option optionDebug = Option.builder("d")
@@ -30,12 +30,16 @@ public class Startup {
             .desc("Enable debug mode")
             .hasArg(false)
             .build();
-        Option optionHelp = Option.builder("h")
-            .longOpt("help")
-            .desc("Display help documentation")
+        Option optionBackup = Option.builder("b")
+            .longOpt("backup")
+            .desc("Start a Backup job")
             .hasArg(false)
             .build();
-
+        Option optionEnvironment = Option.builder("e")
+            .longOpt("environment")
+            .desc("The source environment [plain, plesk, lxc]")
+            .hasArg(true)
+            .build();
         Option optionDirectoryInput = Option.builder("i")
             .longOpt("input")
             .desc("The source directory to be backed up")
@@ -46,40 +50,42 @@ public class Startup {
             .desc("The output directory for the backup to be placed in")
             .hasArg(true)
             .build();
-        Option optionDatabaseEnvironment = Option.builder("e")
-            .longOpt("databaseEnvironment")
-            .desc("The environment of the database [plain, plesk]")
+        Option optionlxcContainerName = Option.builder("lxcn")
+            .longOpt("lxcContainerName")
+            .desc("The name of the LXC Container containing the source files")
             .hasArg(true)
             .build();
-        Option optionDatabaseAddress = Option.builder("a")
-            .longOpt("databaseAddress")
-            .desc("The address/IP of the database server")
+
+        Option optionDatabaseHost = Option.builder("dbh")
+            .longOpt("databaseHost")
+            .desc("The database server host (Source Machine / Container is Reference Point)")
             .hasArg(true)
             .build();
-        Option optionDatabaseName = Option.builder("n")
+        Option optionDatabaseName = Option.builder("dbn")
             .longOpt("databaseName")
             .desc("The name of the database")
             .hasArg(true)
             .build();
-        Option optionDatabaseUser = Option.builder("u")
+        Option optionDatabaseUser = Option.builder("dbu")
             .longOpt("databaseUser")
             .desc("The name of the database user")
             .hasArg(true)
             .build();
-        Option optionDatabasePassword = Option.builder("p")
+        Option optionDatabasePassword = Option.builder("dbp")
             .longOpt("databasePassword")
             .desc("The password of the database user")
             .hasArg(true)
             .build();
 
         Options options = new Options();
-        options.addOption(optionBackup);
-        options.addOption(optionDebug);
         options.addOption(optionHelp);
+        options.addOption(optionDebug);
+        options.addOption(optionBackup);
+        options.addOption(optionEnvironment);
         options.addOption(optionDirectoryInput);
         options.addOption(optionDirectoryOutput);
-        options.addOption(optionDatabaseEnvironment);
-        options.addOption(optionDatabaseAddress);
+        options.addOption(optionlxcContainerName);
+        options.addOption(optionDatabaseHost);
         options.addOption(optionDatabaseName);
         options.addOption(optionDatabaseUser);
         options.addOption(optionDatabasePassword);
@@ -89,7 +95,7 @@ public class Startup {
             CommandLine commandLine = commandLineParser.parse(options, args);
 
             if (commandLine.hasOption("h")) {
-                String helpHeader = "Tool for executing Backup tasks on multiple possible Platforms (plain, plesk)\n\n";
+                String helpHeader = "\nTool for executing Backup tasks on multiple possible Platforms:\nPlain, Plesk, LXC Containers\n\n";
 
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.setOptionComparator(null);
@@ -102,13 +108,23 @@ public class Startup {
             }
 
             if (commandLine.hasOption("b")) {
-                if (!commandLine.hasOption("i") && commandLine.hasOption("o")) {
+                if (!commandLine.hasOption("e")) {
+                    ConsoleOutput.print("error", "No Environment is specified!");
+                }
+                else if (!commandLine.hasOption("i") && commandLine.hasOption("o")) {
                     ConsoleOutput.print("error", "No input is specified!");
                 }
                 else if (commandLine.hasOption("i") && !commandLine.hasOption("o")) {
                     ConsoleOutput.print("error", "No output is specified!");
                 }
                 else if (commandLine.hasOption("i") && commandLine.hasOption("o")) {
+                    //Check Environment Value
+                    String environment = commandLine.getOptionValue("environment");
+                    if ( !(environment.equals("plain") || environment.equals("plesk") || environment.equals("lxc")) ) {
+                        ConsoleOutput.print("error", "Specified Environment is not supported!");
+                        System.exit(1);
+                    }
+
                     //ToDo: Test if Source and Target are accessible in the first place
                     //Check if Source/Target are Remote
                     boolean directoryInputIsRemote = false;
@@ -120,22 +136,27 @@ public class Startup {
                     if (pattern.matcher(directoryInput).find()) { directoryInputIsRemote = true; }
                     if (pattern.matcher(directoryOutput).find()) { directoryOutputIsRemote = true; }
 
+                    //Get LXC Container Name
+                    String lxcContainerName = commandLine.getOptionValue("lxcContainerName");
+
                     //Check if database should also be considered
-                    String databaseEnvironment = "";
-                    String databaseAddress = "";
+                    String databaseHost = "";
                     String databaseName = "";
                     String databaseUser = "";
                     String databasePassword = "";
 
-                    if (commandLine.hasOption("e")) {
-                        if ( commandLine.getOptionValue("databaseEnvironment").equals("plain") || commandLine.getOptionValue("databaseEnvironment").equals("plesk") ) {
-                            //ToDo: Verify Data before releasing it
-                            databaseEnvironment = commandLine.getOptionValue("databaseEnvironment");
-                            databaseAddress = commandLine.getOptionValue("databaseAddress");
-                            databaseName = commandLine.getOptionValue("databaseName");
-                            databaseUser = commandLine.getOptionValue("databaseUser");
-                            databasePassword = commandLine.getOptionValue("databasePassword");
-                        }
+                    if (
+                        (commandLine.getOptionValue("databaseHost") != null) &&
+                        (commandLine.getOptionValue("databaseName") != null) &&
+                        (commandLine.getOptionValue("databaseUser") != null)  &&
+                        (commandLine.getOptionValue("databasePassword") != null)
+                    ) {
+                        //ToDo: Verify Data before releasing it
+                        //ToDo: Check if Environment has mysqldump/plesk Binary (for Plain/Plesk) to work with - For LXC look into specified Container
+                        databaseHost = commandLine.getOptionValue("databaseHost");
+                        databaseName = commandLine.getOptionValue("databaseName");
+                        databaseUser = commandLine.getOptionValue("databaseUser");
+                        databasePassword = commandLine.getOptionValue("databasePassword");
                     }
                     else {
                         ConsoleOutput.print("warning", StatusMessages.NO_DATABASE_BACKUP);
@@ -144,12 +165,13 @@ public class Startup {
                     //Start Backup
                     ConsoleOutput.print("message", "Started Backup process");
                     Main.startBackup(
+                        environment,
                         directoryInput,
                         directoryOutput,
                         directoryInputIsRemote,
                         directoryOutputIsRemote,
-                        databaseEnvironment,
-                        databaseAddress,
+                        lxcContainerName,
+                        databaseHost,
                         databaseName,
                         databaseUser,
                         databasePassword
