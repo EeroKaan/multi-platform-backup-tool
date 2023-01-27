@@ -19,7 +19,7 @@ The MPBT application was developed by Eero Kaan to manage backup tasks of specia
 
 ## Usage
 
-`java -jar mpbt.jar [-h] [-d] [-b] [-e <arg>] [-i <arg>] [-o <arg>] [-lxcn <arg>] [-dbh <arg>] [-dbn <arg>] [-dbu <arg>] [-dbp <arg>]`
+`java -jar mpbt.jar [-h] [-d] [-b] [-e <arg>] [-i <arg>] [-o <arg>] [-lxcn <arg>] [-dbh <arg>] [-dbn <arg>] [-dbu '<arg>'] [-dbp '<arg>']`
 
 <table>
     <tr>

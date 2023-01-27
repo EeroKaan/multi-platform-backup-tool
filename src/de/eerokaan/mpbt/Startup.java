@@ -11,6 +11,8 @@ package de.eerokaan.mpbt;
 import com.google.re2j.*;
 import org.apache.commons.cli.*;
 
+import java.util.Objects;
+
 public class Startup {
     public static void main(String[] args) {
 
@@ -142,23 +144,19 @@ public class Startup {
                     String lxcContainerName = commandLine.getOptionValue("lxcContainerName");
 
                     // Check if database should also be considered
-                    String databaseHost = "";
-                    String databaseName = "";
-                    String databaseUser = "";
-                    String databasePassword = "";
+                    String databaseHost = commandLine.getOptionValue("databaseHost") != null ? commandLine.getOptionValue("databaseHost") : "";
+                    String databaseName = commandLine.getOptionValue("databaseName") != null ? commandLine.getOptionValue("databaseName") : "";
+                    String databaseUser = commandLine.getOptionValue("databaseUser") != null ? Helper.escapeSpecialCharacters(commandLine.getOptionValue("databaseUser")) : "";
+                    String databasePassword = commandLine.getOptionValue("databasePassword") != null ? Helper.escapeSpecialCharacters(commandLine.getOptionValue("databasePassword")) : "";
 
                     if (
-                        (commandLine.getOptionValue("databaseHost") != null) &&
-                        (commandLine.getOptionValue("databaseName") != null) &&
-                        (commandLine.getOptionValue("databaseUser") != null)  &&
-                        (commandLine.getOptionValue("databasePassword") != null)
+                        !Objects.equals(databaseHost, "") &&
+                        !Objects.equals(databaseName, "") &&
+                        !Objects.equals(databaseUser, "") &&
+                        !Objects.equals(databasePassword, "")
                     ) {
                         // ToDo: Verify Data before releasing it
                         // ToDo: Check if Environment has mysqldump/plesk Binary (for Plain/Plesk) to work with - For LXC look into specified Container
-                        databaseHost = commandLine.getOptionValue("databaseHost");
-                        databaseName = commandLine.getOptionValue("databaseName");
-                        databaseUser = commandLine.getOptionValue("databaseUser");
-                        databasePassword = commandLine.getOptionValue("databasePassword");
                     }
                     else {
                         ConsoleOutput.print("warning", StatusMessages.NO_DATABASE_BACKUP);

@@ -89,4 +89,28 @@ public class Helper {
 
         return generatedString;
     }
+
+    public static String escapeSpecialCharacters(String rawString) {
+        return rawString.replace("!", "\\!")
+            .replace("#", "\\#")
+            .replace("$", "\\$")
+            .replace("&", "\\&")
+            .replace("(", "\\(")
+            .replace(")", "\\)")
+            .replace("*", "\\*")
+            .replace(",", "\\,")
+            .replace(";", "\\;")
+            .replace("<", "\\<")
+            .replace(">", "\\>")
+            .replace("?", "\\?")
+            .replace("[", "\\[")
+            .replace("]", "\\]")
+            .replace("^", "\\^")
+            .replace("`", "\\`")
+            .replace("{", "\\{")
+            .replace("}", "\\}")
+            .replace("|", "\\|")
+            .replace("'", "\\'")
+            .replace("\"", "\\\"");
+    }
 }
