@@ -13,13 +13,14 @@ import org.apache.commons.cli.*;
 
 public class Startup {
     public static void main(String[] args) {
-        //Check OS
+
+        // Check OS
         if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
             ConsoleOutput.print("error", StatusMessages.OS_NOT_SUPPORTED);
             System.exit(1);
         }
 
-        //CLI Parsing
+        // CLI Parsing
         Option optionHelp = Option.builder("h")
             .longOpt("help")
             .desc("Display help documentation")
@@ -50,12 +51,11 @@ public class Startup {
             .desc("The output directory for the backup to be placed in")
             .hasArg(true)
             .build();
-        Option optionlxcContainerName = Option.builder("lxcn")
+        Option optionLxcContainerName = Option.builder("lxcn")
             .longOpt("lxcContainerName")
             .desc("The name of the LXC Container containing the source files")
             .hasArg(true)
             .build();
-
         Option optionDatabaseHost = Option.builder("dbh")
             .longOpt("databaseHost")
             .desc("The database server host (Source Machine / Container is Reference Point)")
@@ -84,7 +84,7 @@ public class Startup {
         options.addOption(optionEnvironment);
         options.addOption(optionDirectoryInput);
         options.addOption(optionDirectoryOutput);
-        options.addOption(optionlxcContainerName);
+        options.addOption(optionLxcContainerName);
         options.addOption(optionDatabaseHost);
         options.addOption(optionDatabaseName);
         options.addOption(optionDatabaseUser);
@@ -118,15 +118,17 @@ public class Startup {
                     ConsoleOutput.print("error", "No output is specified!");
                 }
                 else if (commandLine.hasOption("i") && commandLine.hasOption("o")) {
-                    //Check Environment Value
+
+                    // Check Environment Value
                     String environment = commandLine.getOptionValue("environment");
                     if ( !(environment.equals("plain") || environment.equals("plesk") || environment.equals("lxc")) ) {
                         ConsoleOutput.print("error", "Specified Environment is not supported!");
                         System.exit(1);
                     }
 
-                    //ToDo: Test if Source and Target are accessible in the first place
-                    //Check if Source/Target are Remote
+                    // ToDo: Test if Source and Target are accessible in the first place
+
+                    // Check if Source/Target are Remote
                     boolean directoryInputIsRemote = false;
                     boolean directoryOutputIsRemote = false;
                     String directoryInput = commandLine.getOptionValue("input").replaceAll("/$", "");
@@ -136,10 +138,10 @@ public class Startup {
                     if (pattern.matcher(directoryInput).find()) { directoryInputIsRemote = true; }
                     if (pattern.matcher(directoryOutput).find()) { directoryOutputIsRemote = true; }
 
-                    //Get LXC Container Name
+                    // Get LXC Container Name
                     String lxcContainerName = commandLine.getOptionValue("lxcContainerName");
 
-                    //Check if database should also be considered
+                    // Check if database should also be considered
                     String databaseHost = "";
                     String databaseName = "";
                     String databaseUser = "";
@@ -151,8 +153,8 @@ public class Startup {
                         (commandLine.getOptionValue("databaseUser") != null)  &&
                         (commandLine.getOptionValue("databasePassword") != null)
                     ) {
-                        //ToDo: Verify Data before releasing it
-                        //ToDo: Check if Environment has mysqldump/plesk Binary (for Plain/Plesk) to work with - For LXC look into specified Container
+                        // ToDo: Verify Data before releasing it
+                        // ToDo: Check if Environment has mysqldump/plesk Binary (for Plain/Plesk) to work with - For LXC look into specified Container
                         databaseHost = commandLine.getOptionValue("databaseHost");
                         databaseName = commandLine.getOptionValue("databaseName");
                         databaseUser = commandLine.getOptionValue("databaseUser");
@@ -162,7 +164,7 @@ public class Startup {
                         ConsoleOutput.print("warning", StatusMessages.NO_DATABASE_BACKUP);
                     }
 
-                    //Start Backup
+                    // Start Backup
                     ConsoleOutput.print("message", "Started Backup process");
                     Main.startBackup(
                         environment,
@@ -182,7 +184,7 @@ public class Startup {
                 }
             }
             else {
-                ConsoleOutput.print("error", StatusMessages.CLI_NOT_OPERATION_SPECIFIED);
+                ConsoleOutput.print("error", StatusMessages.CLI_OPERATION_NOT_SPECIFIED);
             }
         }
         catch (ParseException exception) {

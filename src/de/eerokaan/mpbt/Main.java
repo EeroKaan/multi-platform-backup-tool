@@ -23,10 +23,10 @@ public class Main {
     ) {
         String sessionString = Helper.generateRandomString();
 
-        //Source is local, Target is local
+        // Source is local, Target is local
         if (!directoryInputIsRemote && !directoryOutputIsRemote) {
             Main.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
-            
+
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("mv /tmp/mpbt-dbdump-" + sessionString + ".sql " + directoryInput + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql");
                 Helper.executeBashCommand("cd " + directoryInput + "/.. && tar -czf /tmp/mpbt-backup-" + sessionString + ".tar.gz " + directoryInput.replaceAll(".*\\/", ""));
@@ -42,7 +42,7 @@ public class Main {
             }
         }
 
-        //Source is local, Target is remote
+        // Source is local, Target is remote
         else if (!directoryInputIsRemote && directoryOutputIsRemote) {
             String remoteOutputUser = Helper.extractFromRemoteResource("user", directoryOutput);
             String remoteOutputHost = Helper.extractFromRemoteResource("host", directoryOutput);
@@ -69,7 +69,7 @@ public class Main {
             }
         }
 
-        //Source is remote, Target is local
+        // Source is remote, Target is local
         else if (directoryInputIsRemote && !directoryOutputIsRemote) {
             String remoteInputUser = Helper.extractFromRemoteResource("user", directoryInput);
             String remoteInputHost = Helper.extractFromRemoteResource("host", directoryInput);
@@ -96,7 +96,7 @@ public class Main {
             }
         }
 
-        //Source is remote, Target is remote
+        // Source is remote, Target is remote
         else if (directoryInputIsRemote && directoryOutputIsRemote) {
             String remoteInputUser = Helper.extractFromRemoteResource("user", directoryInput);
             String remoteInputHost = Helper.extractFromRemoteResource("host", directoryInput);
@@ -132,7 +132,7 @@ public class Main {
             }
         }
 
-        //Backup finished
+        // Backup finished
         ConsoleOutput.print("success", "Backup finished successfully!");
     }
 
@@ -143,7 +143,7 @@ public class Main {
             !databaseUser.isEmpty() &&
             !databasePassword.isEmpty()
         ) {
-            //Remote Machine Command Filters
+            // Remote Machine Command Filters
             String remotePrefixCommand = "";
             String remoteQuotationMarks = "";
 
@@ -154,15 +154,15 @@ public class Main {
                 else {remoteQuotationMarks = "\"";}
             }
 
-            //Create Database Dump
+            // Create Database Dump
             if (environment.equals("plain")) {
-                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
+                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
             }
             else if (environment.equals("plesk")) {
                 Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "plesk db dump " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
             }
             else if (environment.equals("lxc")) {
-                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
+                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
             }
         }
     }
