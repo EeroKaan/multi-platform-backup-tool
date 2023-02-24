@@ -1,9 +1,9 @@
 /**
- * 2021 Eero Kaan
+ * 2023 Eero Kaan
  * https://eerokaan.de/
  *
  *  @author    Eero Kaan <eero@eerokaan.de>
- *  @copyright 2021 Eero Kaan
+ *  @copyright 2023 Eero Kaan
  */
 
 package de.eerokaan.mpbt;

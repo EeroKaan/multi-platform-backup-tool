@@ -1,16 +1,15 @@
 /**
- * 2021 Eero Kaan
+ * 2023 Eero Kaan
  * https://eerokaan.de/
  *
  *  @author    Eero Kaan <eero@eerokaan.de>
- *  @copyright 2021 Eero Kaan
+ *  @copyright 2023 Eero Kaan
  */
 
 package de.eerokaan.mpbt;
 
 import com.google.re2j.*;
 import org.apache.commons.cli.*;
-
 import java.util.Objects;
 
 public class Startup {
@@ -97,7 +96,7 @@ public class Startup {
             CommandLine commandLine = commandLineParser.parse(options, args);
 
             if (commandLine.hasOption("h")) {
-                String helpHeader = "\nTool for executing Backup tasks on multiple possible Platforms:\nPlain, Plesk, LXC Containers\n\n";
+                String helpHeader = "\nTool for executing backup tasks on multiple possible platforms:\nPlain, Plesk, LXC Containers\n\n";
 
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.setOptionComparator(null);
@@ -111,7 +110,7 @@ public class Startup {
 
             if (commandLine.hasOption("b")) {
                 if (!commandLine.hasOption("e")) {
-                    ConsoleOutput.print("error", "No Environment is specified!");
+                    ConsoleOutput.print("error", "No environment is specified!");
                 }
                 else if (!commandLine.hasOption("i") && commandLine.hasOption("o")) {
                     ConsoleOutput.print("error", "No input is specified!");
@@ -124,7 +123,7 @@ public class Startup {
                     // Check Environment Value
                     String environment = commandLine.getOptionValue("environment");
                     if ( !(environment.equals("plain") || environment.equals("plesk") || environment.equals("lxc")) ) {
-                        ConsoleOutput.print("error", "Specified Environment is not supported!");
+                        ConsoleOutput.print("error", "Specified environment is not supported!");
                         System.exit(1);
                     }
 
@@ -164,7 +163,7 @@ public class Startup {
 
                     // Start Backup
                     ConsoleOutput.print("message", "Started Backup process");
-                    Main.startBackup(
+                    Backup.startBackup(
                         environment,
                         directoryInput,
                         directoryOutput,

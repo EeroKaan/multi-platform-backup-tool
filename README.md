@@ -1,21 +1,21 @@
 # Multi Platform Backup Tool (MPBT)
 
-The MPBT application was developed by Eero Kaan to manage backup tasks of specialized WebDev environments across multiple machines. Currently, servers with Plain, Plesk or LXC Container devspace architectures are supported.
+The MPBT application enables you to manage backups on different kinds of webdev environments across multiple machines. Currently, servers with `plain`, `plesk` or `lxc` container architectures are supported.
 
 ## Features
 
 - Support for specialized target machine environments
-  - Plain target machine (Files and database directly accessible) 
-  - Plesk target machine (Files and database are managed by a Plesk Installation) 
-  - LXC Container machine (Files and database are stored in separate Containers on the target machine) 
-- Backup of the accompanying database of the specified file destination (WordPress, Drupal, Magento, etc.)
-- Ability to perform Backups in one of the following modes:
+  - Plain target machine (Data is directly accessible) 
+  - Plesk target machine (Data is managed by a Plesk instance) 
+  - LXC container machine (Data is stored in separate LXC containers on the target machine) 
+- Support for backing up file structures, MySQL and Elasticsearch Instances
+- Ability to perform backups in one of the following modes:
   - Local machine – Local machine
   - Local machine – Remote machine
   - Remote machine – Local machine
   - Remote machine – Remote machine
-- Resilient rsync file transfer between machines (Resuming after broken connections)
-- Support for multiple simultaneous backup jobs via Session-Identifiers
+- Resilient rsync file transfer between machines
+- Support for multiple simultaneous backup jobs via session-identifiers
 
 ## Usage
 
@@ -71,7 +71,7 @@ The MPBT application was developed by Eero Kaan to manage backup tasks of specia
 ## Requirements
 
 - **Java Runtime** On the system running MPBT
-- **mysql / mariadb-client** On target machine when using Database Backup functionality
+- **mysql / mariadb-client** On target machine when using database backup functionality
 - **Prepared SSH Key authentication** To all desired remote machines
 
 ## License

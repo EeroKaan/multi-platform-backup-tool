@@ -1,14 +1,14 @@
 /**
- * 2021 Eero Kaan
+ * 2023 Eero Kaan
  * https://eerokaan.de/
  *
  *  @author    Eero Kaan <eero@eerokaan.de>
- *  @copyright 2021 Eero Kaan
+ *  @copyright 2023 Eero Kaan
  */
 
 package de.eerokaan.mpbt;
 
-public class Main {
+public class Backup {
     public static void startBackup(
         String environment,
         String directoryInput,
@@ -25,7 +25,7 @@ public class Main {
 
         // Source is local, Target is local
         if (!directoryInputIsRemote && !directoryOutputIsRemote) {
-            Main.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
+            Backup.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
 
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("mv /tmp/mpbt-dbdump-" + sessionString + ".sql " + directoryInput + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql");
@@ -49,7 +49,7 @@ public class Main {
             String remoteOutputPort = Helper.extractFromRemoteResource("port", directoryOutput);
             String remoteOutputPath = Helper.extractFromRemoteResource("path", directoryOutput);
 
-            Main.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
+            Backup.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
 
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("mv /tmp/mpbt-dbdump-" + sessionString + ".sql " + directoryInput + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql");
@@ -76,7 +76,7 @@ public class Main {
             String remoteInputPort = Helper.extractFromRemoteResource("port", directoryInput);
             String remoteInputPath = Helper.extractFromRemoteResource("path", directoryInput);
 
-            Main.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, remoteInputUser, remoteInputHost, remoteInputPort);
+            Backup.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, remoteInputUser, remoteInputHost, remoteInputPort);
 
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("ssh -p " + remoteInputPort + " " + remoteInputUser + "@" + remoteInputHost + " \"mv /tmp/mpbt-dbdump-" + sessionString + ".sql /" + remoteInputPath + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql\"");
@@ -108,7 +108,7 @@ public class Main {
             String remoteOutputPort = Helper.extractFromRemoteResource("port", directoryOutput);
             String remoteOutputPath = Helper.extractFromRemoteResource("path", directoryOutput);
 
-            Main.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, remoteInputUser, remoteInputHost, remoteInputPort);
+            Backup.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, remoteInputUser, remoteInputHost, remoteInputPort);
 
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("ssh -p " + remoteInputPort + " " + remoteInputUser + "@" + remoteInputHost + " \"mv /tmp/mpbt-dbdump-" + sessionString + ".sql /" + remoteInputPath + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql\"");
