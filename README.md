@@ -4,18 +4,18 @@ The MPBT application enables you to manage backups on different kinds of webdev 
 
 ## Features
 
+- Support for backing up and restoring file structures, MySQL and Elasticsearch Instances
 - Support for specialized target machine environments
-  - Plain target machine (Data is directly accessible) 
-  - Plesk target machine (Data is managed by a Plesk instance) 
-  - LXC container machine (Data is stored in separate LXC containers on the target machine) 
-- Support for backing up file structures, MySQL and Elasticsearch Instances
-- Ability to perform backups in one of the following modes:
+  - Plain target machine (data is directly accessible)
+  - Plesk target machine (data is managed by a Plesk instance) 
+  - LXC container machine (data is stored in separate LXC containers)
+- Support for push/pull backups on local and remote machines:
   - Local machine – Local machine
   - Local machine – Remote machine
   - Remote machine – Local machine
   - Remote machine – Remote machine
+- Support for multiple simultaneous backup jobs
 - Resilient rsync file transfer between machines
-- Support for multiple simultaneous backup jobs via session-identifiers
 
 ## Usage
 
@@ -70,9 +70,9 @@ The MPBT application enables you to manage backups on different kinds of webdev 
 
 ## Requirements
 
-- **Java Runtime** On the system running MPBT
-- **mysql / mariadb-client** On target machine when using database backup functionality
-- **Prepared SSH Key authentication** To all desired remote machines
+- `openjdk-x-jre` On the system running MPBT
+- `mysql-client / mariadb-client` On target machine when using database backup functionality
+- `Prepared SSH key authentication` To all desired remote machines
 
 ## License
 

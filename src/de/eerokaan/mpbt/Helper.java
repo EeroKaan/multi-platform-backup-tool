@@ -113,4 +113,47 @@ public class Helper {
             .replace("'", "\\'")
             .replace("\"", "\\\"");
     }
+
+    public static void dumpDatabaseToRespectiveTmp(
+        String environment,
+        boolean directoryInputIsRemote,
+        String sessionString,
+        String lxcContainerName,
+        String databaseHost,
+        String databaseName,
+        String databaseUser,
+        String databasePassword,
+        String remoteUser,
+        String remoteHost,
+        String remotePort
+    ) {
+        if (
+            !databaseHost.isEmpty() &&
+            !databaseName.isEmpty() &&
+            !databaseUser.isEmpty() &&
+            !databasePassword.isEmpty()
+        ) {
+            // Remote Machine Command Filters
+            String remotePrefixCommand = "";
+            String remoteQuotationMarks = "";
+
+            if (directoryInputIsRemote) {
+                remotePrefixCommand = "ssh -p " + remotePort + " " + remoteUser + "@" + remoteHost + " ";
+
+                if (environment.equals("lxc")) {remoteQuotationMarks = "'";}
+                else {remoteQuotationMarks = "\"";}
+            }
+
+            // Create Database Dump
+            if (environment.equals("plain")) {
+                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
+            }
+            else if (environment.equals("plesk")) {
+                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "plesk db dump " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
+            }
+            else if (environment.equals("lxc")) {
+                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
+            }
+        }
+    }
 }

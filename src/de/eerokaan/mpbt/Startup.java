@@ -96,7 +96,7 @@ public class Startup {
             CommandLine commandLine = commandLineParser.parse(options, args);
 
             if (commandLine.hasOption("h")) {
-                String helpHeader = "\nTool for executing backup tasks on multiple possible platforms:\nPlain, Plesk, LXC Containers\n\n";
+                String helpHeader = "\nTool for executing backup tasks\n\n";
 
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.setOptionComparator(null);
@@ -136,8 +136,8 @@ public class Startup {
                     String directoryOutput = commandLine.getOptionValue("output").replaceAll("/$", "");
 
                     Pattern pattern = Pattern.compile("^(?P<user>.*?)@(?P<host>.*?):(?:(?P<port>.*?)/)?(?P<path>.*?/.*?)$");
-                    if (pattern.matcher(directoryInput).find()) { directoryInputIsRemote = true; }
-                    if (pattern.matcher(directoryOutput).find()) { directoryOutputIsRemote = true; }
+                    if (pattern.matcher(directoryInput).find()) {directoryInputIsRemote = true;}
+                    if (pattern.matcher(directoryOutput).find()) {directoryOutputIsRemote = true;}
 
                     // Get LXC Container Name
                     String lxcContainerName = commandLine.getOptionValue("lxcContainerName");
@@ -163,7 +163,7 @@ public class Startup {
 
                     // Start Backup
                     ConsoleOutput.print("message", "Started Backup process");
-                    Backup.startBackup(
+                    CLASS.startBackup(
                         environment,
                         directoryInput,
                         directoryOutput,
