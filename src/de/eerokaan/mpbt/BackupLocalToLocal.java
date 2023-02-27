@@ -22,7 +22,7 @@ public class BackupLocalToLocal implements BackupInterface {
         String databaseUser,
         String databasePassword
     ) {
-        Backup.dumpDatabaseToRespectiveTmp(
+        /*Backup.dumpDatabaseToRespectiveTmp(
             environment,
             directoryInputIsRemote,
             sessionString,
@@ -34,7 +34,7 @@ public class BackupLocalToLocal implements BackupInterface {
             null,
             null,
             null
-        );
+        );*/
 
         if (environment.equals("plain") || environment.equals("plesk")) {
             Helper.executeBashCommand("mv /tmp/mpbt-dbdump-" + sessionString + ".sql " + directoryInput + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql");

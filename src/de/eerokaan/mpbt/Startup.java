@@ -10,7 +10,8 @@ package de.eerokaan.mpbt;
 
 import com.google.re2j.*;
 import org.apache.commons.cli.*;
-import java.util.Objects;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Startup {
     public static void main(String[] args) {
@@ -21,172 +22,180 @@ public class Startup {
             System.exit(1);
         }
 
-        // CLI Parsing
-        Option optionHelp = Option.builder("h")
-            .longOpt("help")
-            .desc("Display help documentation")
-            .hasArg(false)
-            .build();
-        Option optionDebug = Option.builder("d")
-            .longOpt("debug")
-            .desc("Enable debug mode")
-            .hasArg(false)
-            .build();
-        Option optionBackup = Option.builder("b")
-            .longOpt("backup")
-            .desc("Start a Backup job")
-            .hasArg(false)
-            .build();
-        Option optionEnvironment = Option.builder("e")
-            .longOpt("environment")
-            .desc("The source environment [plain, plesk, lxc]")
-            .hasArg(true)
-            .build();
-        Option optionDirectoryInput = Option.builder("i")
-            .longOpt("input")
-            .desc("The source directory to be backed up")
-            .hasArg(true)
-            .build();
-        Option optionDirectoryOutput = Option.builder("o")
-            .longOpt("output")
-            .desc("The output directory for the backup to be placed in")
-            .hasArg(true)
-            .build();
-        Option optionLxcContainerName = Option.builder("lxcn")
-            .longOpt("lxcContainerName")
-            .desc("The name of the LXC Container containing the source files")
-            .hasArg(true)
-            .build();
-        Option optionDatabaseHost = Option.builder("dbh")
-            .longOpt("databaseHost")
-            .desc("The database server host (Source Machine / Container is Reference Point)")
-            .hasArg(true)
-            .build();
-        Option optionDatabaseName = Option.builder("dbn")
-            .longOpt("databaseName")
-            .desc("The name of the database")
-            .hasArg(true)
-            .build();
-        Option optionDatabaseUser = Option.builder("dbu")
-            .longOpt("databaseUser")
-            .desc("The name of the database user")
-            .hasArg(true)
-            .build();
-        Option optionDatabasePassword = Option.builder("dbp")
-            .longOpt("databasePassword")
-            .desc("The password of the database user")
-            .hasArg(true)
-            .build();
+        // Retrieve CLI Options
+        Options cliOptions = Startup.cliOptionsCreate();
 
-        Options options = new Options();
-        options.addOption(optionHelp);
-        options.addOption(optionDebug);
-        options.addOption(optionBackup);
-        options.addOption(optionEnvironment);
-        options.addOption(optionDirectoryInput);
-        options.addOption(optionDirectoryOutput);
-        options.addOption(optionLxcContainerName);
-        options.addOption(optionDatabaseHost);
-        options.addOption(optionDatabaseName);
-        options.addOption(optionDatabaseUser);
-        options.addOption(optionDatabasePassword);
-
+        // Parse CLI and sanity-check inputs
         try {
+
+            // CLI Parsing
             CommandLineParser commandLineParser = new DefaultParser();
-            CommandLine commandLine = commandLineParser.parse(options, args);
+            CommandLine commandLine = commandLineParser.parse(cliOptions, args);
 
-            if (commandLine.hasOption("h")) {
-                String helpHeader = "\nTool for executing backup tasks\n\n";
+            // Sanity-Check
+            Startup.cliOptionsSanityCheck(commandLine);
 
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.setOptionComparator(null);
-                formatter.printHelp("java -jar mpbt.jar", helpHeader, options, null, true);
-                System.exit(0);
-            }
-
-            if (commandLine.hasOption("d")) {
-                ConsoleOutput.debugEnabled = true;
-            }
-
-            if (commandLine.hasOption("b")) {
-                if (!commandLine.hasOption("e")) {
-                    ConsoleOutput.print("error", "No environment is specified!");
-                }
-                else if (!commandLine.hasOption("i") && commandLine.hasOption("o")) {
-                    ConsoleOutput.print("error", "No input is specified!");
-                }
-                else if (commandLine.hasOption("i") && !commandLine.hasOption("o")) {
-                    ConsoleOutput.print("error", "No output is specified!");
-                }
-                else if (commandLine.hasOption("i") && commandLine.hasOption("o")) {
-
-                    // Check Environment Value
-                    String environment = commandLine.getOptionValue("environment");
-                    if ( !(environment.equals("plain") || environment.equals("plesk") || environment.equals("lxc")) ) {
-                        ConsoleOutput.print("error", "Specified environment is not supported!");
-                        System.exit(1);
-                    }
-
-                    // ToDo: Test if Source and Target are accessible in the first place
-
-                    // Check if Source/Target are Remote
-                    boolean directoryInputIsRemote = false;
-                    boolean directoryOutputIsRemote = false;
-                    String directoryInput = commandLine.getOptionValue("input").replaceAll("/$", "");
-                    String directoryOutput = commandLine.getOptionValue("output").replaceAll("/$", "");
-
-                    Pattern pattern = Pattern.compile("^(?P<user>.*?)@(?P<host>.*?):(?:(?P<port>.*?)/)?(?P<path>.*?/.*?)$");
-                    if (pattern.matcher(directoryInput).find()) {directoryInputIsRemote = true;}
-                    if (pattern.matcher(directoryOutput).find()) {directoryOutputIsRemote = true;}
-
-                    // Get LXC Container Name
-                    String lxcContainerName = commandLine.getOptionValue("lxcContainerName");
-
-                    // Check if database should also be considered
-                    String databaseHost = commandLine.getOptionValue("databaseHost") != null ? commandLine.getOptionValue("databaseHost") : "";
-                    String databaseName = commandLine.getOptionValue("databaseName") != null ? commandLine.getOptionValue("databaseName") : "";
-                    String databaseUser = commandLine.getOptionValue("databaseUser") != null ? Helper.escapeSpecialCharacters(commandLine.getOptionValue("databaseUser")) : "";
-                    String databasePassword = commandLine.getOptionValue("databasePassword") != null ? Helper.escapeSpecialCharacters(commandLine.getOptionValue("databasePassword")) : "";
-
-                    if (
-                        !Objects.equals(databaseHost, "") &&
-                        !Objects.equals(databaseName, "") &&
-                        !Objects.equals(databaseUser, "") &&
-                        !Objects.equals(databasePassword, "")
-                    ) {
-                        // ToDo: Verify Data before releasing it
-                        // ToDo: Check if Environment has mysqldump/plesk Binary (for Plain/Plesk) to work with - For LXC look into specified Container
-                    }
-                    else {
-                        ConsoleOutput.print("warning", StatusMessages.NO_DATABASE_BACKUP);
-                    }
-
-                    // Start Backup
-                    ConsoleOutput.print("message", "Started Backup process");
-                    CLASS.startBackup(
-                        environment,
-                        directoryInput,
-                        directoryOutput,
-                        directoryInputIsRemote,
-                        directoryOutputIsRemote,
-                        lxcContainerName,
-                        databaseHost,
-                        databaseName,
-                        databaseUser,
-                        databasePassword
-                    );
-                }
-                else {
-                    ConsoleOutput.print("error", StatusMessages.CLI_NOT_ENOUGH_ARGUMENTS);
-                }
-            }
-            else {
-                ConsoleOutput.print("error", StatusMessages.CLI_OPERATION_NOT_SPECIFIED);
-            }
+            // Start Backup/Restore Job
+            // LOREM
         }
         catch (ParseException exception) {
             ConsoleOutput.print("error", StatusMessages.CLI_PARSE_EXCEPTION);
             exception.printStackTrace();
+        }
+    }
+
+    private static Options cliOptionsCreate() {
+
+        // CLI Parameters: General
+        HashMap<String, Option> cliOptionsMap = new HashMap<String, Option>();
+
+        cliOptionsMap.put(
+                "optionHelp",
+                Option.builder(null).longOpt("help").desc("Display help documentation").hasArg(false).build()
+        );
+        cliOptionsMap.put(
+                "optionDebug",
+                Option.builder(null).longOpt("debug").desc("Enable debug mode").hasArg(false).build()
+        );
+        cliOptionsMap.put(
+                "optionMode",
+                Option.builder(null).longOpt("mode").desc("The mode to use MPBT with [backup, restore]").hasArg(true).build()
+        );
+        cliOptionsMap.put(
+                "optionEnvironment",
+                Option.builder(null).longOpt("environment").desc("The source environment [plain, plesk, lxc]").hasArg(true).build()
+        );
+
+        // CLI Parameters: Backup/Restore Types
+        cliOptionsMap.put(
+                "optionTypeDirectory",
+                Option.builder(null).longOpt("directory").desc("Enable backing up/restoring a directory").hasArg(false).build()
+        );
+        cliOptionsMap.put(
+                "optionTypeDatabase",
+                Option.builder(null).longOpt("database").desc("Enable backing up/restoring a MySQL database").hasArg(false).build()
+        );
+        cliOptionsMap.put(
+                "optionTypeElasticsearch",
+                Option.builder(null).longOpt("elasticsearch").desc("Enable backing up/restoring a Elasticsearch instance").hasArg(false).build()
+        );
+
+        // CLI Parameters: Directory specific
+        cliOptionsMap.put(
+                "optionDirectoryPath",
+                Option.builder(null).longOpt("directoryPath").desc("The directory to backup").hasArg(true).build()
+        );
+
+        // CLI Parameters: Database specific
+        cliOptionsMap.put(
+                "optionDatabaseHost",
+                Option.builder(null).longOpt("dbHost").desc("The database server host (source machine / container is reference point)").hasArg(true).build()
+        );
+        cliOptionsMap.put(
+                "optionDatabaseName",
+                Option.builder(null).longOpt("dbName").desc("The name of the database").hasArg(true).build()
+        );
+        cliOptionsMap.put(
+                "optionDatabaseUser",
+                Option.builder(null).longOpt("dbUser").desc("The name of the database user").hasArg(true).build()
+        );
+        cliOptionsMap.put(
+                "optionDatabasePassword",
+                Option.builder(null).longOpt("dbPassword").desc("The password of the database user").hasArg(true).build()
+        );
+
+        // CLI Parameters: Elasticsearch specific
+        // LOREM
+
+        // Register CLI Options
+        Options cliOptions = new Options();
+
+        for (Map.Entry<String, Option> cliOption : cliOptionsMap.entrySet()) {
+            cliOptions.addOption(cliOption.getValue());
+        }
+
+        // Return Stage
+        return cliOptions;
+    }
+
+    private static void cliOptionsSanityCheck(CommandLine commandLine) {
+
+        // Help: Print out parameter documentation
+        if (commandLine.hasOption("help")) {
+            HelpFormatter helpFormatter = new HelpFormatter();
+            helpFormatter.setOptionComparator(null);
+            helpFormatter.printHelp("java -jar mpbt.jar [OPTIONS...] TARGET", "\nTool for executing backup tasks\n\n", cliOptions, null, true);
+            System.exit(0);
+        }
+
+        // Debug: Enable printing out debug messages
+        if (commandLine.hasOption("debug")) {
+            ConsoleOutput.debugEnabled = true;
+        }
+
+        // Target: Sanity-Check if Target is present and valid
+        String target = commandLine.getArgs()[0];
+
+        if (target.isEmpty()) {
+            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_TARGET);
+            System.exit(1);
+        }
+
+        // Mode: Sanity-Check if tasked with backing up or restoring
+        String mode = commandLine.getOptionValue("mode");
+
+        if (!commandLine.hasOption("mode")) {
+            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_MODE);
+            System.exit(1);
+        }
+        if ( !(mode.equals("backup") || mode.equals("restore")) ) {
+            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_MODE);
+            System.exit(1);
+        }
+
+        // Environment: Sanity-Check which environment to use
+        String environment = commandLine.getOptionValue("environment");
+
+        if (!commandLine.hasOption("environment")) {
+            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_ENVIRONMENT);
+            System.exit(1);
+        }
+        if ( !(environment.equals("plain") || environment.equals("plesk") || environment.equals("lxc")) ) {
+            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_ENVIRONMENT);
+            System.exit(1);
+        }
+
+        // Backup/Restore Types: Sanity-Check types
+        if (!commandLine.hasOption("directory") && !commandLine.hasOption("database") && !commandLine.hasOption("elasticsearch")) {
+            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_TYPE);
+            System.exit(1);
+        }
+        if (commandLine.hasOption("directory")) {
+            if (!commandLine.hasOption("directoryPath")) {
+                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DIRECTORY_PATH);
+                System.exit(1);
+            }
+        }
+        if (commandLine.hasOption("database")) {
+            if (!commandLine.hasOption("dbHost")) {
+                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DATABASE_HOST);
+                System.exit(1);
+            }
+            if (!commandLine.hasOption("dbName")) {
+                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DATABASE_NAME);
+                System.exit(1);
+            }
+            if (!commandLine.hasOption("dbUser")) {
+                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DATABASE_USER);
+                System.exit(1);
+            }
+            if (!commandLine.hasOption("dbPassword")) {
+                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DATABASE_PASSWORD);
+                System.exit(1);
+            }
+        }
+        if (commandLine.hasOption("elasticsearch")) {
+            // LOREM
         }
     }
 }

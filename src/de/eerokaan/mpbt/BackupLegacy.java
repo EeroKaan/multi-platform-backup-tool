@@ -25,7 +25,7 @@ public class BackupLegacy {
 
         // Source is local, Target is local
         if (!directoryInputIsRemote && !directoryOutputIsRemote) {
-            BackupLegacy.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
+            //BackupLegacy.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
 
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("mv /tmp/mpbt-dbdump-" + sessionString + ".sql " + directoryInput + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql");
@@ -49,7 +49,7 @@ public class BackupLegacy {
             String remoteOutputPort = Helper.extractFromRemoteResource("port", directoryOutput);
             String remoteOutputPath = Helper.extractFromRemoteResource("path", directoryOutput);
 
-            BackupLegacy.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
+            //BackupLegacy.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, null, null, null);
 
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("mv /tmp/mpbt-dbdump-" + sessionString + ".sql " + directoryInput + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql");
@@ -76,7 +76,7 @@ public class BackupLegacy {
             String remoteInputPort = Helper.extractFromRemoteResource("port", directoryInput);
             String remoteInputPath = Helper.extractFromRemoteResource("path", directoryInput);
 
-            BackupLegacy.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, remoteInputUser, remoteInputHost, remoteInputPort);
+            //BackupLegacy.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, remoteInputUser, remoteInputHost, remoteInputPort);
 
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("ssh -p " + remoteInputPort + " " + remoteInputUser + "@" + remoteInputHost + " \"mv /tmp/mpbt-dbdump-" + sessionString + ".sql /" + remoteInputPath + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql\"");
@@ -108,7 +108,7 @@ public class BackupLegacy {
             String remoteOutputPort = Helper.extractFromRemoteResource("port", directoryOutput);
             String remoteOutputPath = Helper.extractFromRemoteResource("path", directoryOutput);
 
-            BackupLegacy.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, remoteInputUser, remoteInputHost, remoteInputPort);
+            //BackupLegacy.dumpDatabaseToRespectiveTmp(environment, directoryInputIsRemote, sessionString, lxcContainerName, databaseHost, databaseName, databaseUser, databasePassword, remoteInputUser, remoteInputHost, remoteInputPort);
 
             if (environment.equals("plain") || environment.equals("plesk")) {
                 Helper.executeBashCommand("ssh -p " + remoteInputPort + " " + remoteInputUser + "@" + remoteInputHost + " \"mv /tmp/mpbt-dbdump-" + sessionString + ".sql /" + remoteInputPath + "/" + databaseName + "_$(date '+%Y-%m-%d-%H-%M-%S').sql\"");

@@ -9,11 +9,20 @@
 package de.eerokaan.mpbt;
 
 public class StatusMessages {
-    static String CLI_PARSE_EXCEPTION = "An error occurred while parsing the CLI parameters!";
-    static String CLI_NOT_ENOUGH_ARGUMENTS = "Please supply all required arguments!";
-    static String CLI_OPERATION_NOT_SPECIFIED = "No operation specified!";
-    static String NO_DATABASE_BACKUP = "Not backing up any database data!";
-    static String GENERIC_ERROR = "A unexpected error occurred!";
-    static String EXTERNAL_PROGRAM_UNEXPECTED_CLOSE = "An external program closed unexpectedly!";
     static String OS_NOT_SUPPORTED = "Your Operating System is not supported!";
+    static String CLI_PARSE_EXCEPTION = "An error occurred while parsing CLI parameters!";
+    static String EXTERNAL_PROGRAM_UNEXPECTED_CLOSE = "An external program closed unexpectedly!";
+    static String GENERIC_ERROR = "A unexpected error occurred!";
+
+    static String CLI_SPECIFY_TARGET = "Please specify a valid target!";
+    static String CLI_SPECIFY_MODE = "Please specify a valid mode!";
+    static String CLI_SPECIFY_ENVIRONMENT = "Please supply a valid environment!";
+    static String CLI_SPECIFY_TYPE = "Please specify at least one backup/restore type!";
+
+    static String CLI_SPECIFY_DIRECTORY_PATH = "Please specify a directory which should be backup up/restored!";
+
+    static String CLI_SPECIFY_DATABASE_HOST = "Please specify the database host address!";
+    static String CLI_SPECIFY_DATABASE_NAME = "Please specify the database name!";
+    static String CLI_SPECIFY_DATABASE_USER = "Please specify the database user!";
+    static String CLI_SPECIFY_DATABASE_PASSWORD = "Please specify the database password!";
 }
