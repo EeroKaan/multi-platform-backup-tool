@@ -8,12 +8,43 @@
 
 package de.eerokaan.mpbt;
 
-import java.io.*;
-import java.util.*;
+import java.net.InetAddress;
 import com.google.re2j.*;
 
 public class Helper {
-    public static void executeBashCommand(String command) {
+    public static boolean resourceCheckIfRemote(String type, String resource) {
+        boolean returnValue = false;
+
+        if (type.equals("context")) {
+            if (resource != null) {
+                boolean resourceReachable = Helper.resourceRemoteIsReachable(resource);
+                if (resourceReachable) {returnValue = true;}
+            }
+        }
+        if (type.equals("target")) {
+            Pattern pattern = Pattern.compile("^(?P<user>.*?)@(?P<host>.*?):(?:(?P<port>.*?)/)?(?P<path>.*?/.*?)$");
+            if (pattern.matcher(resource).find()) {returnValue = true;}
+        }
+
+        return returnValue;
+    }
+
+    public static boolean resourceRemoteIsReachable(String remote) {
+        boolean returnValue = false;
+
+        try {
+             returnValue = InetAddress.getByName(remote).isReachable(3000);
+        }
+        catch (Exception exception) {
+            ConsoleOutput.print("error", StatusMessages.CONTEXT_CHECK_ERROR);
+            exception.printStackTrace();
+            System.exit(1);
+        }
+
+        return returnValue;
+    }
+
+    /*public static void executeBashCommand(String command) {
         ConsoleOutput.print("debug", command);
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -42,13 +73,13 @@ public class Helper {
         if (stringBuilder.toString().length() > 0) {
             ConsoleOutput.print("message", stringBuilder.toString());
         }
-    }
+    }*/
 
-    public static String rsyncResilienceWrapper(String rsyncRawCommand) {
+    /*public static String rsyncResilienceWrapper(String rsyncRawCommand) {
         return "MAX_RETRIES=10;iterationCounter=0;false;while [ $? -ne 0 -a $iterationCounter -lt $MAX_RETRIES ];do iterationCounter=$(($iterationCounter+1));" + rsyncRawCommand + ";sleep 30;done;if [ $iterationCounter -eq $MAX_RETRIES ];then echo \"Reached max Retries. Aborting.\";fi";
-    }
+    }*/
 
-    public static String extractFromRemoteResource(String dataType, String remoteResource) {
+    /*public static String extractFromRemoteResource(String dataType, String remoteResource) {
         String outputString = "";
 
         Pattern pattern = Pattern.compile("^(?P<user>.*?)@(?P<host>.*?):(?:(?P<port>.*?)/)?(?P<path>.*?/.*?)$");
@@ -73,9 +104,9 @@ public class Helper {
         if (dataType.equals("path")) { outputString = remotePath; }
 
         return outputString;
-    }
+    }*/
 
-    public static String generateRandomString() {
+    /*public static String generateRandomString() {
         int leftLimit = 48; // Number "0"
         int rightLimit = 122; // Letter "z"
         int targetStringLength = 8;
@@ -88,9 +119,9 @@ public class Helper {
             .toString();
 
         return generatedString;
-    }
+    }*/
 
-    public static String escapeSpecialCharacters(String rawString) {
+    /*public static String escapeSpecialCharacters(String rawString) {
         return rawString.replace("!", "\\!")
             .replace("#", "\\#")
             .replace("$", "\\$")
@@ -112,9 +143,9 @@ public class Helper {
             .replace("|", "\\|")
             .replace("'", "\\'")
             .replace("\"", "\\\"");
-    }
+    }*/
 
-    public static void dumpDatabaseToRespectiveTmp(
+    /*public static void dumpDatabaseToRespectiveTmp(
         String environment,
         boolean directoryInputIsRemote,
         String sessionString,
@@ -155,5 +186,5 @@ public class Helper {
                 Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
             }
         }
-    }
+    }*/
 }

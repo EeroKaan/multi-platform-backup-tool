@@ -9,17 +9,21 @@ The MPBT application enables you to manage backups on different kinds of webdev 
     - Plain machines (data is directly accessible)
     - Plesk machines (data is managed by a Plesk instance)
     - LXC container machines (data is stored in separate LXC containers)
-- Support for push/pull backups on local and remote machines:
-    - Local machine – Local machine
-    - Local machine – Remote machine
-    - Remote machine – Local machine
-    - Remote machine – Remote machine
-- Support for multiple simultaneous backup jobs
-- Resilient rsync file transfer between machines
+- Support for push/pull backup/restore via `context` and `TARGET` settings:
+    - Local machine → Local machine
+    - Local machine → Remote machine
+    - Remote machine → Local machine
+    - Remote machine → Remote machine
+- Support for multiple simultaneous jobs
+- Resilient rsync file transfer between machines (auto-resume after connection error)
 
 ## Usage
 
-`java -jar mpbt.jar [OPTIONS...] TARGET`
+```
+java -jar mpbt.jar [OPTIONS...] TARGET
+java -jar mpbt.jar [OPTIONS...] /home/user/mybackups
+java -jar mpbt.jar [OPTIONS...] user@remotemachine.com:/home/user/mybackups
+```
 
 <table>
     <tr>
@@ -42,19 +46,23 @@ The MPBT application enables you to manage backups on different kinds of webdev 
         <td>The source environment<br>[plain, plesk, lxc]</td>
     </tr>
     <tr>
-        <td colspan="2"><b>Backup Types</b></td>
+        <td>--context &lt;arg&gt;</td>
+        <td>The machine from which hostnames and paths are viewed from</td>
+    </tr>
+    <tr>
+        <td colspan="2"><b>Backup/Restore Types</b></td>
     </tr>
     <tr>
         <td>--directory</td>
-        <td>Enable backing up a directory</td>
+        <td>Enable backing up/restoring a directory</td>
     </tr>
     <tr>
         <td>--database</td>
-        <td>Enable backing up a MySQL database</td>
+        <td>Enable backing up/restoring a MySQL database</td>
     </tr>
     <tr>
         <td>--elasticsearch</td>
-        <td>Enable backing up a Elasticsearch instance</td>
+        <td>Enable backing up/restoring a Elasticsearch instance</td>
     </tr>
     <tr>
         <td colspan="2"><b>Directory specific parameters</b></td>
@@ -68,7 +76,7 @@ The MPBT application enables you to manage backups on different kinds of webdev 
     </tr>
     <tr>
         <td>--dbHost &lt;arg&gt;</td>
-        <td>The database server host<br>(source machine / container is reference point)</td>
+        <td>The database server host</td>
     </tr>
     <tr>
         <td>--dbName &lt;arg&gt;</td>
