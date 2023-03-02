@@ -1,4 +1,5 @@
-# Multi Platform Backup Tool (MPBT)
+#
+Multi Platform Backup Tool (MPBT)
 
 The MPBT application enables you to manage backups on different kinds of webdev environments across multiple machines. Currently, servers with `plain`, `plesk` or `lxc` container architectures are supported.
 

@@ -8,9 +8,9 @@
 
 package de.eerokaan.mpbt;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import org.apache.commons.cli.*;
 
 public class Startup {
@@ -44,9 +44,10 @@ public class Startup {
 
             if (mode.equals("backup")) {
                 if (!contextIsRemote && !targetIsRemote) {
-                    Job job = new Job(
+                    Job job = new Backup(
                         commandLine.getOptionValue("environment"),
                         commandLine.getOptionValue("context"),
+                        commandLine.getArgs()[0],
                         Startup.cliOptionsJobTypes(commandLine),
                         Startup.cliOptionsDirectorySpecific(commandLine),
                         Startup.cliOptionsDatabaseSpecific(commandLine),
