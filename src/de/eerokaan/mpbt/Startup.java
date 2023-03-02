@@ -1,6 +1,6 @@
 /**
- * 2023 Eero Kaan
- * https://eerokaan.de/
+ *  2023 Eero Kaan
+ *  https://eerokaan.de/
  *
  *  @author    Eero Kaan <eero@eerokaan.de>
  *  @copyright 2023 Eero Kaan
@@ -8,6 +8,7 @@
 
 package de.eerokaan.mpbt;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import org.apache.commons.cli.*;
@@ -35,11 +36,27 @@ public class Startup {
             Startup.cliOptionsSanityCheck(commandLine, cliOptions);
 
             // Check context and TARGET if local/remote
-            boolean contextIsRemote = Helper.resourceCheckIfRemote("context", commandLine.getOptionValue("context"));
-            boolean targetIsRemote = Helper.resourceCheckIfRemote("target", commandLine.getArgs()[0]);
+            boolean contextIsRemote = Helper.resourceIsRemote("context", commandLine.getOptionValue("context"));
+            boolean targetIsRemote = Helper.resourceIsRemote("target", commandLine.getArgs()[0]);
 
-            // Start Backup/Restore Job
-            // LOREM
+            // Start Job
+            String mode = commandLine.getOptionValue("mode");
+
+            if (mode.equals("backup")) {
+                if (!contextIsRemote && !targetIsRemote) {
+                    Job job = new Job(
+                        commandLine.getOptionValue("environment"),
+                        commandLine.getOptionValue("context"),
+                        Startup.cliOptionsJobTypes(commandLine),
+                        Startup.cliOptionsDirectorySpecific(commandLine),
+                        Startup.cliOptionsDatabaseSpecific(commandLine),
+                        Startup.cliOptionsElasticsearchSpecific(commandLine)
+                    );
+                }
+            }
+            else if (mode.equals("restore")) {
+
+            }
         }
         catch (ParseException exception) {
             ConsoleOutput.print("error", StatusMessages.CLI_PARSE_EXCEPTION);
@@ -74,7 +91,7 @@ public class Startup {
             Option.builder(null).longOpt("context").desc("The machine from which hostnames and paths are viewed from").hasArg(true).build()
         );
 
-        // CLI Parameters: Backup/Restore Types
+        // CLI Parameters: Job Types
         cliOptionsMap.put(
             "optionTypeDirectory",
             Option.builder(null).longOpt("directory").desc("Enable backing up/restoring a directory").hasArg(false).build()
@@ -188,7 +205,7 @@ public class Startup {
             }
         }
 
-        // Backup/Restore Types: Sanity-Check types
+        // Job Types: Sanity-Check types
         if (!commandLine.hasOption("directory") && !commandLine.hasOption("database") && !commandLine.hasOption("elasticsearch")) {
             ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_TYPE);
             System.exit(1);
@@ -220,5 +237,77 @@ public class Startup {
         if (commandLine.hasOption("elasticsearch")) {
             // LOREM
         }
+    }
+
+    private static ArrayList<String> cliOptionsJobTypes(CommandLine commandLine) {
+        ArrayList<String> jobTypes = new ArrayList<String>();
+
+        if (commandLine.hasOption("directory")) {
+            jobTypes.add("directory");
+        }
+        if (commandLine.hasOption("database")) {
+            jobTypes.add("database");
+        }
+        if (commandLine.hasOption("elasticsearch")) {
+            jobTypes.add("elasticsearch");
+        }
+
+        return jobTypes;
+    }
+
+    private static HashMap<String, String> cliOptionsDirectorySpecific(CommandLine commandLine) {
+        HashMap<String, String> specificsMap = new HashMap<String, String>();
+
+        if (commandLine.hasOption("directory")) {
+            if (commandLine.hasOption("directoryPath")) {
+                specificsMap.put(
+                    "directoryPath",
+                    commandLine.getOptionValue("directoryPath")
+                );
+            }
+        }
+
+        return specificsMap;
+    }
+
+    private static HashMap<String, String> cliOptionsDatabaseSpecific(CommandLine commandLine) {
+        HashMap<String, String> specificsMap = new HashMap<String, String>();
+
+        if (commandLine.hasOption("database")) {
+            if (commandLine.hasOption("dbHost")) {
+                specificsMap.put(
+                    "dbHost",
+                    commandLine.getOptionValue("dbHost")
+                );
+            }
+            if (commandLine.hasOption("dbName")) {
+                specificsMap.put(
+                    "dbName",
+                    commandLine.getOptionValue("dbName")
+                );
+            }
+            if (commandLine.hasOption("dbUser")) {
+                specificsMap.put(
+                    "dbUser",
+                    commandLine.getOptionValue("dbUser")
+                );
+            }
+            if (commandLine.hasOption("dbPassword")) {
+                specificsMap.put(
+                    "dbPassword",
+                    commandLine.getOptionValue("dbPassword")
+                );
+            }
+        }
+
+        return specificsMap;
+    }
+
+    private static HashMap<String, String> cliOptionsElasticsearchSpecific(CommandLine commandLine) {
+        HashMap<String, String> specificsMap = new HashMap<String, String>();
+
+        // LOREM
+
+        return specificsMap;
     }
 }

@@ -50,7 +50,7 @@ java -jar mpbt.jar [OPTIONS...] user@remotemachine.com:/home/user/mybackups
         <td>The machine from which hostnames and paths are viewed from</td>
     </tr>
     <tr>
-        <td colspan="2"><b>Backup/Restore Types</b></td>
+        <td colspan="2"><b>Job Types</b></td>
     </tr>
     <tr>
         <td>--directory</td>

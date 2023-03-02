@@ -1,6 +1,6 @@
 /**
- * 2023 Eero Kaan
- * https://eerokaan.de/
+ *  2023 Eero Kaan
+ *  https://eerokaan.de/
  *
  *  @author    Eero Kaan <eero@eerokaan.de>
  *  @copyright 2023 Eero Kaan
@@ -12,7 +12,7 @@ import java.net.InetAddress;
 import com.google.re2j.*;
 
 public class Helper {
-    public static boolean resourceCheckIfRemote(String type, String resource) {
+    public static boolean resourceIsRemote(String type, String resource) {
         boolean returnValue = false;
 
         if (type.equals("context")) {
