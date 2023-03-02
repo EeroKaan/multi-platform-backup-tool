@@ -8,7 +8,11 @@
 
 package de.eerokaan.mpbt;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.util.Random;
 import com.google.re2j.*;
 
 public class Helper {
@@ -44,7 +48,22 @@ public class Helper {
         return returnValue;
     }
 
-    /*public static void executeBashCommand(String command) {
+    public static String generateRandomString() {
+        int leftLimit = 48; // Number "0"
+        int rightLimit = 122; // Letter "z"
+        int targetStringLength = 8;
+        Random random = new Random();
+
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+            .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+            .limit(targetStringLength)
+            .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+            .toString();
+
+        return generatedString;
+    }
+
+    public static void executeShellCommand(String command) {
         ConsoleOutput.print("debug", command);
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -73,7 +92,7 @@ public class Helper {
         if (stringBuilder.toString().length() > 0) {
             ConsoleOutput.print("message", stringBuilder.toString());
         }
-    }*/
+    }
 
     /*public static String rsyncResilienceWrapper(String rsyncRawCommand) {
         return "MAX_RETRIES=10;iterationCounter=0;false;while [ $? -ne 0 -a $iterationCounter -lt $MAX_RETRIES ];do iterationCounter=$(($iterationCounter+1));" + rsyncRawCommand + ";sleep 30;done;if [ $iterationCounter -eq $MAX_RETRIES ];then echo \"Reached max Retries. Aborting.\";fi";
@@ -104,21 +123,6 @@ public class Helper {
         if (dataType.equals("path")) { outputString = remotePath; }
 
         return outputString;
-    }*/
-
-    /*public static String generateRandomString() {
-        int leftLimit = 48; // Number "0"
-        int rightLimit = 122; // Letter "z"
-        int targetStringLength = 8;
-        Random random = new Random();
-
-        String generatedString = random.ints(leftLimit, rightLimit + 1)
-            .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-            .limit(targetStringLength)
-            .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-            .toString();
-
-        return generatedString;
     }*/
 
     /*public static String escapeSpecialCharacters(String rawString) {
@@ -177,13 +181,13 @@ public class Helper {
 
             // Create Database Dump
             if (environment.equals("plain")) {
-                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
+                Helper.executeShellCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
             }
             else if (environment.equals("plesk")) {
-                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "plesk db dump " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
+                Helper.executeShellCommand(remotePrefixCommand + remoteQuotationMarks + "plesk db dump " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
             }
             else if (environment.equals("lxc")) {
-                Helper.executeBashCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
+                Helper.executeShellCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
             }
         }
     }*/

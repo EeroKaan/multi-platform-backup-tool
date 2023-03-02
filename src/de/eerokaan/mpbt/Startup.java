@@ -25,15 +25,18 @@ public class Startup {
         // Retrieve CLI Options
         Options cliOptions = Startup.cliOptionsCreate();
 
-        // Parse CLI and sanity-check inputs
+        // Check inputs and OS environment - Start Job if successful
         try {
 
             // CLI Parsing
             CommandLineParser commandLineParser = new DefaultParser();
             CommandLine commandLine = commandLineParser.parse(cliOptions, args);
 
-            // Sanity-Check
+            // Sanity-Check CLI
             Startup.cliOptionsSanityCheck(commandLine, cliOptions);
+
+            // ToDo: Check if OS binaries are present (mysqldump, rsync, evtl. [bash, zsh, sh], etc.)
+            // LOREM
 
             // Check context and TARGET if local/remote
             boolean contextIsRemote = Helper.resourceIsRemote("context", commandLine.getOptionValue("context"));
@@ -53,6 +56,7 @@ public class Startup {
                         Startup.cliOptionsDatabaseSpecific(commandLine),
                         Startup.cliOptionsElasticsearchSpecific(commandLine)
                     );
+                    job.start();
                 }
             }
             else if (mode.equals("restore")) {
