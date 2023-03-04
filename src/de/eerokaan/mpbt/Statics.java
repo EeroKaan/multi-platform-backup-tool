@@ -8,12 +8,19 @@
 
 package de.eerokaan.mpbt;
 
-public class StatusMessages {
-    static String OS_NOT_SUPPORTED = "Your Operating System is not supported!";
+public class Statics {
+
+    // Paths
+    static String ELASTICSEARCH_CONFIG_PATH = "/etc/elasticsearch/elasticsearch.yml";
+
+    // Status Messages: General
+    static String CHECK_OS_ERROR = "Your Operating System is not supported!";
+    static String CHECK_CONTEXT_ERROR = "A error occurred while checking the specified context for connectivity!";
+    static String CHECK_ELASTICSEARCH_CONFIG_ERROR = "Please make sure that the Elasticsearch config file (" + Statics.ELASTICSEARCH_CONFIG_PATH + ") is readable! Consider adding your user to the \"elasticsearch\" group.";
     static String EXTERNAL_PROGRAM_UNEXPECTED_CLOSE = "An external program closed unexpectedly!";
-    static String CONTEXT_CHECK_ERROR = "A error occurred while checking the specified context for connectivity!";
     static String GENERIC_ERROR = "A unexpected error occurred!";
 
+    // Status Messages: CLI Sanity-Check
     static String CLI_PARSE_EXCEPTION = "An error occurred while parsing CLI parameters!";
     static String CLI_SPECIFY_TARGET = "Please specify a valid target!";
     static String CLI_SPECIFY_MODE = "Please specify a valid mode!";
@@ -25,4 +32,5 @@ public class StatusMessages {
     static String CLI_SPECIFY_DATABASE_NAME = "Please specify the database name!";
     static String CLI_SPECIFY_DATABASE_USER = "Please specify the database user!";
     static String CLI_SPECIFY_DATABASE_PASSWORD = "Please specify the database password!";
+    static String CLI_SPECIFY_ELASTICSEARCH_HOST = "Please specify the Elasticsearch host address!";
 }

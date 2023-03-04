@@ -94,8 +94,8 @@ java -jar mpbt.jar [OPTIONS...] user@remotemachine.com:/home/user/mybackups
         <td colspan="2"><b>Elasticsearch specific parameters</b></td>
     </tr>
     <tr>
-        <td>--LOREM</td>
-        <td>LOREM</td>
+        <td>--esHost &lt;arg&gt;</td>
+        <td>The Elasticsearch server host</td>
     </tr>
 </table>
 

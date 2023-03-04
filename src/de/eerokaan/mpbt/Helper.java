@@ -9,6 +9,7 @@
 package de.eerokaan.mpbt;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
@@ -40,7 +41,7 @@ public class Helper {
              returnValue = InetAddress.getByName(remote).isReachable(3000);
         }
         catch (Exception exception) {
-            ConsoleOutput.print("error", StatusMessages.CONTEXT_CHECK_ERROR);
+            ConsoleOutput.print("error", Statics.CHECK_CONTEXT_ERROR);
             exception.printStackTrace();
             System.exit(1);
         }
@@ -63,7 +64,7 @@ public class Helper {
         return generatedString;
     }
 
-    public static void executeShellCommand(String command) {
+    public static void shellExecuteCommand(String command) {
         ConsoleOutput.print("debug", command);
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -71,27 +72,51 @@ public class Helper {
         processBuilder.command("bash", "-c", command);
 
         try {
+            String currentLine;
             Process process = processBuilder.start();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
-            String currentLine;
             while ((currentLine = bufferedReader.readLine()) != null) {
                 stringBuilder.append(currentLine + "\n");
             }
 
-            int exitValue = process.waitFor();
-            if (exitValue != 0) {
-                ConsoleOutput.print("warning", StatusMessages.EXTERNAL_PROGRAM_UNEXPECTED_CLOSE);
+            if (process.waitFor() != 0) {
+                ConsoleOutput.print("warning", Statics.EXTERNAL_PROGRAM_UNEXPECTED_CLOSE);
             }
+
+            bufferedReader.close();
         }
         catch (IOException | InterruptedException exception) {
-            ConsoleOutput.print("error", StatusMessages.GENERIC_ERROR);
+            ConsoleOutput.print("error", Statics.GENERIC_ERROR);
             exception.printStackTrace();
         }
 
         if (stringBuilder.toString().length() > 0) {
             ConsoleOutput.print("message", stringBuilder.toString());
         }
+    }
+
+    public static String shellSearchFileByKey(String filePath, String searchKey) {
+        String searchResult = null;
+
+        try {
+            String currentLine;
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath));
+
+            while ((currentLine = bufferedReader.readLine()) != null) {
+                if (currentLine.contains(searchKey)) {
+                    searchResult = currentLine.substring(searchKey.length());
+                }
+            }
+
+            bufferedReader.close();
+        }
+        catch (IOException exception) {
+            ConsoleOutput.print("error", Statics.GENERIC_ERROR);
+            exception.printStackTrace();
+        }
+
+        return searchResult;
     }
 
     /*public static String rsyncResilienceWrapper(String rsyncRawCommand) {
@@ -181,13 +206,13 @@ public class Helper {
 
             // Create Database Dump
             if (environment.equals("plain")) {
-                Helper.executeShellCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
+                Helper.shellExecuteCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
             }
             else if (environment.equals("plesk")) {
-                Helper.executeShellCommand(remotePrefixCommand + remoteQuotationMarks + "plesk db dump " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
+                Helper.shellExecuteCommand(remotePrefixCommand + remoteQuotationMarks + "plesk db dump " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
             }
             else if (environment.equals("lxc")) {
-                Helper.executeShellCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
+                Helper.shellExecuteCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
             }
         }
     }*/

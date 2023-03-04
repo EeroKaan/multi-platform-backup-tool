@@ -8,6 +8,8 @@
 
 package de.eerokaan.mpbt;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ public class Startup {
 
         // Check OS
         if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-            ConsoleOutput.print("error", StatusMessages.OS_NOT_SUPPORTED);
+            ConsoleOutput.print("error", Statics.CHECK_OS_ERROR);
             System.exit(1);
         }
 
@@ -64,7 +66,7 @@ public class Startup {
             }
         }
         catch (ParseException exception) {
-            ConsoleOutput.print("error", StatusMessages.CLI_PARSE_EXCEPTION);
+            ConsoleOutput.print("error", Statics.CLI_PARSE_EXCEPTION);
             exception.printStackTrace();
             System.exit(1);
         }
@@ -135,7 +137,10 @@ public class Startup {
         );
 
         // CLI Parameters: Elasticsearch specific
-        // LOREM
+        cliOptionsMap.put(
+            "optionElasticsearchHost",
+            Option.builder(null).longOpt("esHost").desc("The Elasticsearch server host").hasArg(true).build()
+        );
 
         // Register CLI Options
         Options cliOptions = new Options();
@@ -165,37 +170,37 @@ public class Startup {
 
         // Target: Sanity-Check if TARGET is present and valid
         if (commandLine.getArgs().length == 0) {
-            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_TARGET);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARGET);
             System.exit(1);
         }
 
         String target = commandLine.getArgs()[0];
         if (target.isEmpty()) {
-            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_TARGET);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARGET);
             System.exit(1);
         }
 
         // Mode: Sanity-Check if tasked with backing up or restoring
         if (!commandLine.hasOption("mode")) {
-            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_MODE);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_MODE);
             System.exit(1);
         }
 
         String mode = commandLine.getOptionValue("mode");
         if ( !(mode.equals("backup") || mode.equals("restore")) ) {
-            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_MODE);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_MODE);
             System.exit(1);
         }
 
         // Environment: Sanity-Check which environment to use
         if (!commandLine.hasOption("environment")) {
-            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_ENVIRONMENT);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_ENVIRONMENT);
             System.exit(1);
         }
 
         String environment = commandLine.getOptionValue("environment");
         if ( !(environment.equals("plain") || environment.equals("plesk") || environment.equals("lxc")) ) {
-            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_ENVIRONMENT);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_ENVIRONMENT);
             System.exit(1);
         }
 
@@ -205,42 +210,49 @@ public class Startup {
             boolean contextReachable = Helper.resourceRemoteIsReachable(context);
 
             if (!contextReachable) {
-                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_CONTEXT_UNREACHABLE);
+                ConsoleOutput.print("error", Statics.CLI_SPECIFY_CONTEXT_UNREACHABLE);
                 System.exit(1);
             }
         }
 
         // Job Types: Sanity-Check types
         if (!commandLine.hasOption("directory") && !commandLine.hasOption("database") && !commandLine.hasOption("elasticsearch")) {
-            ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_TYPE);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TYPE);
             System.exit(1);
         }
         if (commandLine.hasOption("directory")) {
             if (!commandLine.hasOption("directoryPath")) {
-                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DIRECTORY_PATH);
+                ConsoleOutput.print("error", Statics.CLI_SPECIFY_DIRECTORY_PATH);
                 System.exit(1);
             }
         }
         if (commandLine.hasOption("database")) {
             if (!commandLine.hasOption("dbHost")) {
-                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DATABASE_HOST);
+                ConsoleOutput.print("error", Statics.CLI_SPECIFY_DATABASE_HOST);
                 System.exit(1);
             }
             if (!commandLine.hasOption("dbName")) {
-                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DATABASE_NAME);
+                ConsoleOutput.print("error", Statics.CLI_SPECIFY_DATABASE_NAME);
                 System.exit(1);
             }
             if (!commandLine.hasOption("dbUser")) {
-                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DATABASE_USER);
+                ConsoleOutput.print("error", Statics.CLI_SPECIFY_DATABASE_USER);
                 System.exit(1);
             }
             if (!commandLine.hasOption("dbPassword")) {
-                ConsoleOutput.print("error", StatusMessages.CLI_SPECIFY_DATABASE_PASSWORD);
+                ConsoleOutput.print("error", Statics.CLI_SPECIFY_DATABASE_PASSWORD);
                 System.exit(1);
             }
         }
         if (commandLine.hasOption("elasticsearch")) {
-            // LOREM
+            if (!Files.isReadable(Paths.get(Statics.ELASTICSEARCH_CONFIG_PATH))) {
+                ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_CONFIG_ERROR);
+                System.exit(1);
+            }
+            if (!commandLine.hasOption("esHost")) {
+                ConsoleOutput.print("error", Statics.CLI_SPECIFY_ELASTICSEARCH_HOST);
+                System.exit(1);
+            }
         }
     }
 
@@ -311,7 +323,14 @@ public class Startup {
     private static HashMap<String, String> cliOptionsElasticsearchSpecific(CommandLine commandLine) {
         HashMap<String, String> specificsMap = new HashMap<String, String>();
 
-        // LOREM
+        if (commandLine.hasOption("elasticsearch")) {
+            if (commandLine.hasOption("esHost")) {
+                specificsMap.put(
+                    "esHost",
+                    commandLine.getOptionValue("esHost")
+                );
+            }
+        }
 
         return specificsMap;
     }
