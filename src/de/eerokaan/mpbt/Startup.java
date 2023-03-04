@@ -141,6 +141,10 @@ public class Startup {
             "optionElasticsearchHost",
             Option.builder(null).longOpt("esHost").desc("The Elasticsearch server host").hasArg(true).build()
         );
+        cliOptionsMap.put(
+            "optionElasticsearchIndexPrefix",
+            Option.builder(null).longOpt("esIndexPrefix").desc("The Elasticsearch index prefix to backup/restore").hasArg(true).build()
+        );
 
         // Register CLI Options
         Options cliOptions = new Options();
@@ -249,8 +253,16 @@ public class Startup {
                 ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_CONFIG_ERROR);
                 System.exit(1);
             }
+            if (Helper.shellSearchFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ").isEmpty()) {
+                ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_REPO_PATH);
+                System.exit(1);
+            }
             if (!commandLine.hasOption("esHost")) {
                 ConsoleOutput.print("error", Statics.CLI_SPECIFY_ELASTICSEARCH_HOST);
+                System.exit(1);
+            }
+            if (!commandLine.hasOption("esIndexPrefix")) {
+                ConsoleOutput.print("error", Statics.CLI_SPECIFY_ELASTICSEARCH_INDEX_PREFIX);
                 System.exit(1);
             }
         }
@@ -328,6 +340,12 @@ public class Startup {
                 specificsMap.put(
                     "esHost",
                     commandLine.getOptionValue("esHost")
+                );
+            }
+            if (commandLine.hasOption("esIndexPrefix")) {
+                specificsMap.put(
+                    "esIndexPrefix",
+                    commandLine.getOptionValue("esIndexPrefix").equals("*") ? "*,-.*" : commandLine.getOptionValue("esIndexPrefix") + "*"
                 );
             }
         }

@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.nio.file.Paths;
 import java.util.Random;
 import com.google.re2j.*;
 
@@ -117,6 +118,15 @@ public class Helper {
         }
 
         return searchResult;
+    }
+
+    public static String[] pathParseLastDir(String path) {
+        String[] pathSegments = new String[2];
+
+        pathSegments[0] = Paths.get(path).getParent().toString();
+        pathSegments[1] = Paths.get(path).getFileName().toString();
+
+        return pathSegments;
     }
 
     /*public static String rsyncResilienceWrapper(String rsyncRawCommand) {

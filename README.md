@@ -95,7 +95,11 @@ java -jar mpbt.jar [OPTIONS...] user@remotemachine.com:/home/user/mybackups
     </tr>
     <tr>
         <td>--esHost &lt;arg&gt;</td>
-        <td>The Elasticsearch server host</td>
+        <td>The Elasticsearch master node hostname</td>
+    </tr>
+    <tr>
+        <td>--esIndexPrefix &lt;arg&gt;</td>
+        <td>The Elasticsearch index prefix to backup/restore</td>
     </tr>
 </table>
 

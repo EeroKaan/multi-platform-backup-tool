@@ -17,6 +17,7 @@ public class Statics {
     static String CHECK_OS_ERROR = "Your Operating System is not supported!";
     static String CHECK_CONTEXT_ERROR = "A error occurred while checking the specified context for connectivity!";
     static String CHECK_ELASTICSEARCH_CONFIG_ERROR = "Please make sure that the Elasticsearch config file (" + Statics.ELASTICSEARCH_CONFIG_PATH + ") is readable! Consider adding your user to the \"elasticsearch\" group.";
+    static String CHECK_ELASTICSEARCH_REPO_PATH = "Please make sure to specify the \"path.repo\" option in your Elasticsearch config file (" + Statics.ELASTICSEARCH_CONFIG_PATH + ")! Skipping Elasticsearch backup/restore.";
     static String EXTERNAL_PROGRAM_UNEXPECTED_CLOSE = "An external program closed unexpectedly!";
     static String GENERIC_ERROR = "A unexpected error occurred!";
 
@@ -33,4 +34,5 @@ public class Statics {
     static String CLI_SPECIFY_DATABASE_USER = "Please specify the database user!";
     static String CLI_SPECIFY_DATABASE_PASSWORD = "Please specify the database password!";
     static String CLI_SPECIFY_ELASTICSEARCH_HOST = "Please specify the Elasticsearch host address!";
+    static String CLI_SPECIFY_ELASTICSEARCH_INDEX_PREFIX = "Please specify the Elasticsearch index prefix! Use the wildcard \"*\" to select all indices.";
 }
