@@ -8,8 +8,6 @@
 
 package de.eerokaan.mpbt;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -184,6 +182,11 @@ public class Startup {
             System.exit(1);
         }
 
+        if (!Helper.pathParseProperties(target).get("isFile")) {
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARGET_AS_FILE);
+            System.exit(1);
+        }
+
         // Mode: Sanity-Check if tasked with backing up or restoring
         if (!commandLine.hasOption("mode")) {
             ConsoleOutput.print("error", Statics.CLI_SPECIFY_MODE);
@@ -249,7 +252,7 @@ public class Startup {
             }
         }
         if (commandLine.hasOption("elasticsearch")) {
-            if (!Files.isReadable(Paths.get(Statics.ELASTICSEARCH_CONFIG_PATH))) {
+            if (!Helper.pathParseProperties(Statics.ELASTICSEARCH_CONFIG_PATH).get("isReadable")) {
                 ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_CONFIG_ERROR);
                 System.exit(1);
             }

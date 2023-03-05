@@ -23,7 +23,8 @@ public class Statics {
 
     // Status Messages: CLI Sanity-Check
     static String CLI_PARSE_EXCEPTION = "An error occurred while parsing CLI parameters!";
-    static String CLI_SPECIFY_TARGET = "Please specify a valid target!";
+    static String CLI_SPECIFY_TARGET = "Please specify a valid target file where to write to (backup) or where to read from (restore)!";
+    static String CLI_SPECIFY_TARGET_AS_FILE = "Please specify a valid target! Bear in mind to specify a file, not a directory.";
     static String CLI_SPECIFY_MODE = "Please specify a valid mode!";
     static String CLI_SPECIFY_ENVIRONMENT = "Please supply a valid environment!";
     static String CLI_SPECIFY_CONTEXT_UNREACHABLE = "The specified context is not reachable. Please check connectivity!";

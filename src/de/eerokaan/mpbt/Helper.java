@@ -13,7 +13,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Random;
 import com.google.re2j.*;
 
@@ -120,13 +123,35 @@ public class Helper {
         return searchResult;
     }
 
-    public static String[] pathParseLastDir(String path) {
-        String[] pathSegments = new String[2];
+    public static HashMap<String, String> pathParseStructure(String pathRaw) {
+        HashMap<String, String> returnMap = new HashMap<String, String>();
+        Path path = Paths.get(pathRaw);
 
-        pathSegments[0] = Paths.get(path).getParent().toString();
-        pathSegments[1] = Paths.get(path).getFileName().toString();
+        returnMap.put("pathBase", path.getParent().toString());
+        returnMap.put("pathLastDir", path.getFileName().toString());
 
-        return pathSegments;
+        return returnMap;
+    }
+
+    public static HashMap<String, Boolean> pathParseProperties(String pathRaw) {
+        HashMap<String, Boolean> returnMap = new HashMap<String, Boolean>();
+        Path path = Paths.get(pathRaw);
+
+        returnMap.put("exists", Files.exists(path));
+        returnMap.put("isReadable", Files.isReadable(path));
+        returnMap.put("isDirectory", Files.isDirectory(path));
+
+        returnMap.put("isFile", false);
+        if (path.getFileName() != null) {
+            String fileName = path.getFileName().toString();
+            int dotIndex = fileName.lastIndexOf(".");
+
+            if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                returnMap.put("isFile", true);
+            }
+        }
+
+        return returnMap;
     }
 
     /*public static String rsyncResilienceWrapper(String rsyncRawCommand) {
