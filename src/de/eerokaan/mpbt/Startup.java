@@ -60,7 +60,18 @@ public class Startup {
                 }
             }
             else if (mode.equals("restore")) {
-
+                if (!contextIsRemote && !targetIsRemote) {
+                    Job job = new Restore(
+                        commandLine.getOptionValue("environment"),
+                        commandLine.getOptionValue("context"),
+                        commandLine.getArgs()[0],
+                        Startup.cliOptionsJobTypes(commandLine),
+                        Startup.cliOptionsDirectorySpecific(commandLine),
+                        Startup.cliOptionsDatabaseSpecific(commandLine),
+                        Startup.cliOptionsElasticsearchSpecific(commandLine)
+                    );
+                    job.start();
+                }
             }
         }
         catch (ParseException exception) {
