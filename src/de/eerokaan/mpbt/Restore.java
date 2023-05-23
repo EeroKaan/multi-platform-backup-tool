@@ -61,10 +61,37 @@ public class Restore extends Job {
         if (this.jobTypes.contains("elasticsearch")) {
             ConsoleOutput.print("message", "Restoring Elasticsearch...");
 
-            // ToDo: Restore ElasticSearch
+            // Initialize Paths
+            String esRepoPath = Helper.shellSearchFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ");
+            String pathBase = Helper.pathParseStructure(esRepoPath).get("pathBase");
+
+            // Stop Elasticsearch service
+            Helper.shellExecuteCommand("service elasticsearch stop");
+
+            // Delete old path.repo contents and replace with contents from backup
+            Helper.shellExecuteCommand("rm -rf " + esRepoPath);
+            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + sessionString + "/elasticsearch_*.tar -C " + pathBase);
+
+            // Set correct permissions
+            Helper.shellExecuteCommand("chown -R elasticsearch:elasticsearch " + esRepoPath);
+
+            // Restart Elasticsearch service
+            Helper.shellExecuteCommand("service elasticsearch start");
+
+            // Create Elasticsearch repository
+            Helper.shellExecuteCommand("curl -XPUT -H 'content-type:application/json' 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo' -d '{\"type\":\"fs\",\"settings\":{\"location\":\"" + esRepoPath + "\",\"compress\":true}}'");
+
+            // Restore from snapshot
+            Helper.shellExecuteCommand("curl -XPOST 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo/snapshot/_restore?wait_for_completion=true'");
+
+            // Delete snapshot
+            Helper.shellExecuteCommand("curl -XDELETE 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo/snapshot'");
+
+            // Delete repository
+            Helper.shellExecuteCommand("curl -XDELETE 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo'");
         }
 
         // Finalize Job
-        // Lorem
+        Helper.shellExecuteCommand("rm -rf /tmp/mpbt-" + sessionString);
     }
 }

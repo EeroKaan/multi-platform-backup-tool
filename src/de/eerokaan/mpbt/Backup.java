@@ -65,19 +65,17 @@ public class Backup extends Job {
             String pathBase = Helper.pathParseStructure(esRepoPath).get("pathBase");
             String pathLastDir = Helper.pathParseStructure(esRepoPath).get("pathLastDir");
 
-            // ToDo: Check if esRepoPath is valid
-
             // Create Elasticsearch repository
             Helper.shellExecuteCommand("curl -XPUT -H 'content-type:application/json' 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo' -d '{\"type\":\"fs\",\"settings\":{\"location\":\"" + esRepoPath + "\",\"compress\":true}}'");
 
-            // Create snapshot inside created repository
+            // Create snapshot inside repository
             Helper.shellExecuteCommand("curl -XPUT -H 'content-type:application/json' 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo/snapshot?wait_for_completion=true' -d '{\"indices\": \"" + this.elasticsearchSpecific.get("esIndexPrefix") + "\",\"ignore_unavailable\": true,\"include_global_state\": false}'");
 
             // "Unmount" Elasticsearch repository
             Helper.shellExecuteCommand("curl -XDELETE 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo'");
 
             // Backup snapshot from filesystem to archive
-            Helper.shellExecuteCommand("tar -cf /tmp/mpbt-" + sessionString + "/elasticsearch_$(date '+%Y-%m-%d-%H-%M-%S').tar -C " + pathBase + "/ " + pathLastDir);
+            Helper.shellExecuteCommand("tar -cf /tmp/mpbt-" + sessionString + "/elasticsearch_$(date '+%Y-%m-%d-%H-%M-%S').tar -C " + pathBase + " " + pathLastDir);
 
             // "Remount" Elasticsearch repository
             Helper.shellExecuteCommand("curl -XPUT -H 'content-type:application/json' 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo' -d '{\"type\":\"fs\",\"settings\":{\"location\":\"" + esRepoPath + "\",\"compress\":true}}'");
