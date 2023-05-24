@@ -93,13 +93,22 @@ public class Helper {
     public static HashMap<String, String> pathParseStructure(String pathRaw) {
         HashMap<String, String> returnMap = new HashMap<String, String>();
 
+        // Precondition pathRaw if remote
+        if (Helper.resourceIsRemote(pathRaw)) {
+            pathRaw = "sftp://" + pathRaw.replace(":/", "/");
+        }
+
+        // Process path
         try {
             FileSystemManager fsManager = VFS.getManager();
             FileObject resource = fsManager.resolveFile(pathRaw);
 
             if (resource.exists()) {
-                returnMap.put("pathBase", new URI(resource.getParent().toString()).getPath());
-                returnMap.put("pathLastDir", new URI(resource.getName().toString()).getPath());
+                String pathBase = new URI(resource.getParent().toString()).getPath();
+                String pathLastDir = new URI(resource.getName().toString()).getPath().replace(pathBase + "/", "");
+
+                returnMap.put("pathBase", pathBase);
+                returnMap.put("pathLastDir", pathLastDir);
             }
 
             resource.close();
@@ -116,19 +125,25 @@ public class Helper {
     public static HashMap<String, Boolean> pathParseProperties(String pathRaw) {
         HashMap<String, Boolean> returnMap = new HashMap<String, Boolean>();
 
+        // Precondition pathRaw if remote
+        if (Helper.resourceIsRemote(pathRaw)) {
+            pathRaw = "sftp://" + pathRaw.replace(":/", "/");
+        }
+
+        // Process path
         try {
             FileSystemManager fsManager = VFS.getManager();
             FileObject resource = fsManager.resolveFile(pathRaw);
 
             if (resource.exists()) {
 
-                // Populate Map
+                // Populate map
                 returnMap.put("exists", resource.exists());
                 returnMap.put("isReadable", resource.isReadable());
                 returnMap.put("isDirectory", (resource.getType() == FileType.FOLDER));
                 returnMap.put("isFile", false);
 
-                // Special Check for "isFile" (Also checks for file validity, which don't exist yet)
+                // Special check for "isFile" (Also checks for file validity, which don't exist yet)
                 if (resource.getName() != null) {
                     String fileName = resource.getName().toString();
                     int dotIndex = fileName.lastIndexOf(".");
@@ -157,7 +172,6 @@ public class Helper {
 
         return returnValue;
     }
-
 
     /*public static String rsyncResilienceWrapper(String rsyncRawCommand) {
         return "MAX_RETRIES=10;iterationCounter=0;false;while [ $? -ne 0 -a $iterationCounter -lt $MAX_RETRIES ];do iterationCounter=$(($iterationCounter+1));" + rsyncRawCommand + ";sleep 30;done;if [ $iterationCounter -eq $MAX_RETRIES ];then echo \"Reached max Retries. Aborting.\";fi";

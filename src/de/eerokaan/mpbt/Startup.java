@@ -158,7 +158,7 @@ public class Startup {
         if (commandLine.hasOption("help")) {
             HelpFormatter helpFormatter = new HelpFormatter();
             helpFormatter.setOptionComparator(null);
-            helpFormatter.printHelp("java -jar mpbt.jar [OPTIONS...] TARGET", "\nTool for executing backup/restore tasks\n\n", cliOptions, null, true);
+            helpFormatter.printHelp("java -jar mpbt.jar [OPTIONS...] TARBALL", "\nTool for executing backup/restore tasks\n\n", cliOptions, null, true);
             System.exit(0);
         }
 
@@ -167,20 +167,20 @@ public class Startup {
             ConsoleOutput.debugEnabled = true;
         }
 
-        // Target: Sanity-Check if TARGET is present and valid
+        // Tarball: Sanity-Check if TARBALL is present and valid
         if (commandLine.getArgs().length == 0) {
-            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARGET);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARBALL);
             System.exit(1);
         }
 
-        String target = commandLine.getArgs()[0];
-        if (target.isEmpty()) {
-            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARGET);
+        String tarball = commandLine.getArgs()[0];
+        if (tarball.isEmpty()) {
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARBALL);
             System.exit(1);
         }
 
-        if (!Helper.pathParseProperties(target).get("isFile")) {
-            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARGET_AS_FILE);
+        if (!Helper.pathParseProperties(tarball).get("isFile")) {
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARBALL_AS_FILE);
             System.exit(1);
         }
 

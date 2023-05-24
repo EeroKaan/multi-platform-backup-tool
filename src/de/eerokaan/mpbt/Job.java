@@ -13,7 +13,7 @@ import java.util.HashMap;
 
 public abstract class Job {
     String environment;
-    String target;
+    String tarball;
     ArrayList<String> jobTypes;
     HashMap<String, String> directorySpecific;
     HashMap<String, String> databaseSpecific;
@@ -21,14 +21,14 @@ public abstract class Job {
 
     public Job(
         String environment,
-        String target,
+        String tarball,
         ArrayList<String> jobTypes,
         HashMap<String, String> directorySpecific,
         HashMap<String, String> databaseSpecific,
         HashMap<String, String> elasticsearchSpecific
     ) {
         this.environment = environment;
-        this.target = target;
+        this.tarball = tarball;
         this.jobTypes = jobTypes;
         this.directorySpecific = directorySpecific;
         this.databaseSpecific = databaseSpecific;

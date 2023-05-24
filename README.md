@@ -20,9 +20,7 @@ The MPBT application enables you to manage backups on different kinds of webdev 
 ## Usage
 
 ```
-java -jar mpbt.jar [OPTIONS...] TARGET
-java -jar mpbt.jar [OPTIONS...] /home/user/mybackups
-java -jar mpbt.jar [OPTIONS...] user@remotemachine.com:/home/user/mybackups
+java -jar mpbt.jar [OPTIONS...] TARBALL
 ```
 
 <table>
@@ -101,9 +99,9 @@ java -jar mpbt.jar [OPTIONS...] user@remotemachine.com:/home/user/mybackups
 
 ## Requirements
 
-- `openjdk-<VERSION>-jre` On the system running MPBT
-- `mysql-client / mariadb-client` On target machine when using database backup/restore functionality
-- `Prepared SSH key authentication` To all desired remote machines
+- `openjdk-<VERSION>-jre`
+- `mysql-client or compatible (e.g. mariadb-client)`
+- `Prepared SSH key authentication`
 
 ## License
 

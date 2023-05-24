@@ -14,7 +14,7 @@ import java.util.HashMap;
 public class Backup extends Job {
     public Backup(
         String environment,
-        String target,
+        String tarball,
         ArrayList<String> jobTypes,
         HashMap<String, String> directorySpecific,
         HashMap<String, String> databaseSpecific,
@@ -22,7 +22,7 @@ public class Backup extends Job {
     ) {
         super(
             environment,
-            target,
+            tarball,
             jobTypes,
             directorySpecific,
             databaseSpecific,
@@ -46,7 +46,7 @@ public class Backup extends Job {
             String pathBase = Helper.pathParseStructure(this.directorySpecific.get("directoryPath")).get("pathBase");
             String pathLastDir = Helper.pathParseStructure(this.directorySpecific.get("directoryPath")).get("pathLastDir");
 
-            Helper.shellExecuteCommand("tar -cf /tmp/mpbt-" + sessionString + "/directory_$(date '+%Y-%m-%d-%H-%M-%S').tar -C " + pathBase + "/ " + pathLastDir);
+            Helper.shellExecuteCommand("tar -cf /tmp/mpbt-" + sessionString + "/directory_$(date '+%Y-%m-%d-%H-%M-%S').tar -C " + pathBase + " " + pathLastDir);
         }
 
         if (this.jobTypes.contains("database")) {
@@ -86,7 +86,7 @@ public class Backup extends Job {
         }
 
         // Finalize Job
-        Helper.shellExecuteCommand("tar -czf " + this.target + " -C /tmp/mpbt-" + sessionString + " .");
+        Helper.shellExecuteCommand("tar -czf " + this.tarball + " -C /tmp/mpbt-" + sessionString + " .");
         Helper.shellExecuteCommand("rm -rf /tmp/mpbt-" + sessionString);
     }
 }

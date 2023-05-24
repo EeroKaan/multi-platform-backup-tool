@@ -14,7 +14,7 @@ import java.util.HashMap;
 public class Restore extends Job {
     public Restore(
         String environment,
-        String target,
+        String tarball,
         ArrayList<String> jobTypes,
         HashMap<String, String> directorySpecific,
         HashMap<String, String> databaseSpecific,
@@ -22,7 +22,7 @@ public class Restore extends Job {
     ) {
         super(
             environment,
-            target,
+            tarball,
             jobTypes,
             directorySpecific,
             databaseSpecific,
@@ -38,7 +38,7 @@ public class Restore extends Job {
         // Pre-Job Initializations
         String sessionString = Helper.generateRandomString();
         Helper.shellExecuteCommand("mkdir /tmp/mpbt-" + sessionString);
-        Helper.shellExecuteCommand("tar -xzf " + this.target + " -C /tmp/mpbt-" + sessionString);
+        Helper.shellExecuteCommand("tar -xzf " + this.tarball + " -C /tmp/mpbt-" + sessionString);
 
         // Restore backup to all specified sources
         if (this.jobTypes.contains("directory")) {
@@ -47,7 +47,7 @@ public class Restore extends Job {
             String pathBase = Helper.pathParseStructure(this.directorySpecific.get("directoryPath")).get("pathBase");
 
             Helper.shellExecuteCommand("rm -rf " + this.directorySpecific.get("directoryPath"));
-            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + sessionString + "/directory_*.tar -C " + pathBase + "/");
+            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + sessionString + "/directory_*.tar -C " + pathBase);
         }
 
         if (this.jobTypes.contains("database")) {
