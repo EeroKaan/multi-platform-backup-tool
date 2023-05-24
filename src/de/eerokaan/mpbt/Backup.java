@@ -14,7 +14,6 @@ import java.util.HashMap;
 public class Backup extends Job {
     public Backup(
         String environment,
-        String context,
         String target,
         ArrayList<String> jobTypes,
         HashMap<String, String> directorySpecific,
@@ -23,7 +22,6 @@ public class Backup extends Job {
     ) {
         super(
             environment,
-            context,
             target,
             jobTypes,
             directorySpecific,
@@ -35,7 +33,7 @@ public class Backup extends Job {
     @Override
     public void start() {
 
-        // ToDo: Currently backup-mode "backup" with "local-local" on [plain, plesk] is assumed
+        // ToDo: Currently "local-local" on [plain, plesk] is assumed -> Implement LXD + Local/Remote Combinations
 
         // Pre-Job Initializations
         String sessionString = Helper.generateRandomString();
@@ -61,7 +59,7 @@ public class Backup extends Job {
             ConsoleOutput.print("message", "Backing up Elasticsearch...");
 
             // Initialize Paths
-            String esRepoPath = Helper.shellSearchFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ");
+            String esRepoPath = Helper.shellSearchLocalFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ");
             String pathBase = Helper.pathParseStructure(esRepoPath).get("pathBase");
             String pathLastDir = Helper.pathParseStructure(esRepoPath).get("pathLastDir");
 

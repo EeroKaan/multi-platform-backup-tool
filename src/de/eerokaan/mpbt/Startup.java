@@ -38,40 +38,30 @@ public class Startup {
             // ToDo: Check if OS binaries are present (mysqldump, rsync, evtl. [bash, zsh, sh], etc.)
             // LOREM
 
-            // Check context and TARGET if local/remote
-            boolean contextIsRemote = Helper.resourceIsRemote("context", commandLine.getOptionValue("context"));
-            boolean targetIsRemote = Helper.resourceIsRemote("target", commandLine.getArgs()[0]);
-
             // Start Job
             String mode = commandLine.getOptionValue("mode");
 
             if (mode.equals("backup")) {
-                if (!contextIsRemote && !targetIsRemote) {
-                    Job job = new Backup(
-                        commandLine.getOptionValue("environment"),
-                        commandLine.getOptionValue("context"),
-                        commandLine.getArgs()[0],
-                        Startup.cliOptionsJobTypes(commandLine),
-                        Startup.cliOptionsDirectorySpecific(commandLine),
-                        Startup.cliOptionsDatabaseSpecific(commandLine),
-                        Startup.cliOptionsElasticsearchSpecific(commandLine)
-                    );
-                    job.start();
-                }
+                Job job = new Backup(
+                    commandLine.getOptionValue("environment"),
+                    commandLine.getArgs()[0],
+                    Startup.cliOptionsJobTypes(commandLine),
+                    Startup.cliOptionsDirectorySpecific(commandLine),
+                    Startup.cliOptionsDatabaseSpecific(commandLine),
+                    Startup.cliOptionsElasticsearchSpecific(commandLine)
+                );
+                job.start();
             }
             else if (mode.equals("restore")) {
-                if (!contextIsRemote && !targetIsRemote) {
-                    Job job = new Restore(
-                        commandLine.getOptionValue("environment"),
-                        commandLine.getOptionValue("context"),
-                        commandLine.getArgs()[0],
-                        Startup.cliOptionsJobTypes(commandLine),
-                        Startup.cliOptionsDirectorySpecific(commandLine),
-                        Startup.cliOptionsDatabaseSpecific(commandLine),
-                        Startup.cliOptionsElasticsearchSpecific(commandLine)
-                    );
-                    job.start();
-                }
+                Job job = new Restore(
+                    commandLine.getOptionValue("environment"),
+                    commandLine.getArgs()[0],
+                    Startup.cliOptionsJobTypes(commandLine),
+                    Startup.cliOptionsDirectorySpecific(commandLine),
+                    Startup.cliOptionsDatabaseSpecific(commandLine),
+                    Startup.cliOptionsElasticsearchSpecific(commandLine)
+                );
+                job.start();
             }
         }
         catch (ParseException exception) {
@@ -101,10 +91,6 @@ public class Startup {
         cliOptionsMap.put(
             "optionEnvironment",
             Option.builder(null).longOpt("environment").desc("The source environment [plain, plesk, lxc]").hasArg(true).build()
-        );
-        cliOptionsMap.put(
-            "optionContext",
-            Option.builder(null).longOpt("context").desc("The machine from which hostnames and paths are viewed from").hasArg(true).build()
         );
 
         // CLI Parameters: Job Types
@@ -222,17 +208,6 @@ public class Startup {
             System.exit(1);
         }
 
-        // Context: Check if Context is reachable
-        if (commandLine.hasOption("context")) {
-            String context = commandLine.getOptionValue("context");
-            boolean contextReachable = Helper.resourceRemoteIsReachable(context);
-
-            if (!contextReachable) {
-                ConsoleOutput.print("error", Statics.CLI_SPECIFY_CONTEXT_UNREACHABLE);
-                System.exit(1);
-            }
-        }
-
         // Job Types: Sanity-Check types
         if (!commandLine.hasOption("directory") && !commandLine.hasOption("database") && !commandLine.hasOption("elasticsearch")) {
             ConsoleOutput.print("error", Statics.CLI_SPECIFY_TYPE);
@@ -263,11 +238,15 @@ public class Startup {
             }
         }
         if (commandLine.hasOption("elasticsearch")) {
+            if (mode.equals("restore") && !System.getProperty("user.name").equals("root")) {
+                ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_USER);
+                System.exit(1);
+            }
             if (!Helper.pathParseProperties(Statics.ELASTICSEARCH_CONFIG_PATH).get("isReadable")) {
                 ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_CONFIG_ERROR);
                 System.exit(1);
             }
-            if (Helper.shellSearchFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ").isEmpty()) {
+            if (Helper.shellSearchLocalFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ").isEmpty()) {
                 ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_REPO_PATH);
                 System.exit(1);
             }

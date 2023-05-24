@@ -8,51 +8,18 @@
 
 package de.eerokaan.mpbt;
 
+import java.util.HashMap;
+import java.util.Random;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Random;
+import java.net.URI;
+import java.net.URISyntaxException;
 import com.google.re2j.*;
+import org.apache.commons.vfs2.*;
 
 public class Helper {
-    public static boolean resourceIsRemote(String type, String resource) {
-        boolean returnValue = false;
-
-        if (type.equals("context")) {
-            if (resource != null) {
-                boolean resourceReachable = Helper.resourceRemoteIsReachable(resource);
-                if (resourceReachable) {returnValue = true;}
-            }
-        }
-        if (type.equals("target")) {
-            Pattern pattern = Pattern.compile("^(?P<user>.*?)@(?P<host>.*?):(?:(?P<port>.*?)/)?(?P<path>.*?/.*?)$");
-            if (pattern.matcher(resource).find()) {returnValue = true;}
-        }
-
-        return returnValue;
-    }
-
-    public static boolean resourceRemoteIsReachable(String remote) {
-        boolean returnValue = false;
-
-        try {
-             returnValue = InetAddress.getByName(remote).isReachable(3000);
-        }
-        catch (Exception exception) {
-            ConsoleOutput.print("error", Statics.CHECK_CONTEXT_ERROR);
-            exception.printStackTrace();
-            System.exit(1);
-        }
-
-        return returnValue;
-    }
-
     public static String generateRandomString() {
         int leftLimit = 48; // Number "0"
         int rightLimit = 122; // Letter "z"
@@ -100,7 +67,7 @@ public class Helper {
         }
     }
 
-    public static String shellSearchFileByKey(String filePath, String searchKey) {
+    public static String shellSearchLocalFileByKey(String filePath, String searchKey) {
         String searchResult = null;
 
         try {
@@ -125,34 +92,72 @@ public class Helper {
 
     public static HashMap<String, String> pathParseStructure(String pathRaw) {
         HashMap<String, String> returnMap = new HashMap<String, String>();
-        Path path = Paths.get(pathRaw);
 
-        returnMap.put("pathBase", path.getParent().toString());
-        returnMap.put("pathLastDir", path.getFileName().toString());
+        try {
+            FileSystemManager fsManager = VFS.getManager();
+            FileObject resource = fsManager.resolveFile(pathRaw);
+
+            if (resource.exists()) {
+                returnMap.put("pathBase", new URI(resource.getParent().toString()).getPath());
+                returnMap.put("pathLastDir", new URI(resource.getName().toString()).getPath());
+            }
+
+            resource.close();
+        }
+        catch (URISyntaxException | FileSystemException exception) {
+            ConsoleOutput.print("error", Statics.GENERIC_ERROR);
+            exception.printStackTrace();
+        }
+
 
         return returnMap;
     }
 
     public static HashMap<String, Boolean> pathParseProperties(String pathRaw) {
         HashMap<String, Boolean> returnMap = new HashMap<String, Boolean>();
-        Path path = Paths.get(pathRaw);
 
-        returnMap.put("exists", Files.exists(path));
-        returnMap.put("isReadable", Files.isReadable(path));
-        returnMap.put("isDirectory", Files.isDirectory(path));
+        try {
+            FileSystemManager fsManager = VFS.getManager();
+            FileObject resource = fsManager.resolveFile(pathRaw);
 
-        returnMap.put("isFile", false);
-        if (path.getFileName() != null) {
-            String fileName = path.getFileName().toString();
-            int dotIndex = fileName.lastIndexOf(".");
+            if (resource.exists()) {
 
-            if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-                returnMap.put("isFile", true);
+                // Populate Map
+                returnMap.put("exists", resource.exists());
+                returnMap.put("isReadable", resource.isReadable());
+                returnMap.put("isDirectory", (resource.getType() == FileType.FOLDER));
+                returnMap.put("isFile", false);
+
+                // Special Check for "isFile" (Also checks for file validity, which don't exist yet)
+                if (resource.getName() != null) {
+                    String fileName = resource.getName().toString();
+                    int dotIndex = fileName.lastIndexOf(".");
+
+                    if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
+                        returnMap.put("isFile", true);
+                    }
+                }
             }
+
+            resource.close();
+        }
+        catch (FileSystemException exception) {
+            ConsoleOutput.print("error", Statics.GENERIC_ERROR);
+            exception.printStackTrace();
         }
 
         return returnMap;
     }
+
+    public static boolean resourceIsRemote(String resource) {
+        boolean returnValue = false;
+
+        Pattern pattern = Pattern.compile("^(?P<user>.*?)@(?P<host>.*?):(?:(?P<port>.*?)/)?(?P<path>.*?/.*?)$");
+        if (pattern.matcher(resource).find()) {returnValue = true;}
+
+        return returnValue;
+    }
+
 
     /*public static String rsyncResilienceWrapper(String rsyncRawCommand) {
         return "MAX_RETRIES=10;iterationCounter=0;false;while [ $? -ne 0 -a $iterationCounter -lt $MAX_RETRIES ];do iterationCounter=$(($iterationCounter+1));" + rsyncRawCommand + ";sleep 30;done;if [ $iterationCounter -eq $MAX_RETRIES ];then echo \"Reached max Retries. Aborting.\";fi";

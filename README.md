@@ -1,6 +1,6 @@
 # Multi Platform Backup Tool (MPBT)
 
-The MPBT application enables you to manage backups on different kinds of webdev environments across multiple machines. Currently, servers with `plain`, `plesk` or `lxc` container architectures are supported.
+The MPBT application enables you to manage backups on different kinds of webdev environments across multiple machines. Currently, servers with `plain`, `plesk` or `lxc` architectures are supported.
 
 ## Features
 
@@ -9,7 +9,7 @@ The MPBT application enables you to manage backups on different kinds of webdev 
     - Plain machines (data is directly accessible)
     - Plesk machines (data is managed by a Plesk instance)
     - LXC container machines (data is stored in separate LXC containers)
-- Support for push/pull backup/restore via `context` and `TARGET` settings:
+- Support for push/pull backup/restore:
     - Local machine → Local machine
     - Local machine → Remote machine
     - Remote machine → Local machine
@@ -44,10 +44,6 @@ java -jar mpbt.jar [OPTIONS...] user@remotemachine.com:/home/user/mybackups
     <tr>
         <td>--environment &lt;arg&gt;</td>
         <td>The source environment<br>[plain, plesk, lxc]</td>
-    </tr>
-    <tr>
-        <td>--context &lt;arg&gt;</td>
-        <td>The machine from which hostnames and paths are viewed from</td>
     </tr>
     <tr>
         <td colspan="2"><b>Job Types</b></td>
