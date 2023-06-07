@@ -10,6 +10,7 @@ package de.eerokaan.mpbt;
 
 import java.util.HashMap;
 import java.util.Random;
+import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -18,6 +19,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import com.google.re2j.*;
 import org.apache.commons.vfs2.*;
+import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
+import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
+import com.jcraft.jsch.*;
 
 public class Helper {
     public static String generateRandomString() {
@@ -98,10 +102,15 @@ public class Helper {
             pathRaw = "sftp://" + pathRaw.replace(":/", "/");
         }
 
-        // Process path
+        // Process resource
         try {
+            FileSystemOptions fsOptions = new FileSystemOptions();
+            SftpFileSystemConfigBuilder.getInstance().setStrictHostKeyChecking(fsOptions, "no");
+            SftpFileSystemConfigBuilder.getInstance().setIdentityInfo(fsOptions, new IdentityInfo(new File(System.getProperty("user.home") + "/.ssh/id_ed25519")));
+            SftpFileSystemConfigBuilder.getInstance().setKnownHosts(fsOptions, new File(System.getProperty("user.home") + "/.ssh/known_hosts"));
+
             FileSystemManager fsManager = VFS.getManager();
-            FileObject resource = fsManager.resolveFile(pathRaw);
+            FileObject resource = fsManager.resolveFile(pathRaw, fsOptions);
 
             if (resource.exists()) {
                 String pathBase = new URI(resource.getParent().toString()).getPath();
@@ -118,7 +127,6 @@ public class Helper {
             exception.printStackTrace();
         }
 
-
         return returnMap;
     }
 
@@ -130,28 +138,32 @@ public class Helper {
             pathRaw = "sftp://" + pathRaw.replace(":/", "/");
         }
 
-        // Process path
+        // Process resource
         try {
             FileSystemManager fsManager = VFS.getManager();
             FileObject resource = fsManager.resolveFile(pathRaw);
 
+            // Update attributes if resource exists
             if (resource.exists()) {
-
-                // Populate map
                 returnMap.put("exists", resource.exists());
                 returnMap.put("isReadable", resource.isReadable());
-                returnMap.put("isDirectory", (resource.getType() == FileType.FOLDER));
+            }
+            else {
+                returnMap.put("exists", false);
+                returnMap.put("isReadable", false);
+            }
+
+            // Process isDirectory/isFile (even for yet non-existent resources)
+            String resourceName = pathRaw.substring(pathRaw.lastIndexOf("/") + 1);
+            int resourceExtensionIndex = resourceName.lastIndexOf(".");
+
+            if (resourceExtensionIndex > 0 && resourceExtensionIndex < resourceName.length() - 1) {
+                returnMap.put("isDirectory", false);
+                returnMap.put("isFile", true);
+            }
+            else {
+                returnMap.put("isDirectory", true);
                 returnMap.put("isFile", false);
-
-                // Special check for "isFile" (Also checks for file validity, which don't exist yet)
-                if (resource.getName() != null) {
-                    String fileName = resource.getName().toString();
-                    int dotIndex = fileName.lastIndexOf(".");
-
-                    if (dotIndex > 0 && dotIndex < fileName.length() - 1) {
-                        returnMap.put("isFile", true);
-                    }
-                }
             }
 
             resource.close();
