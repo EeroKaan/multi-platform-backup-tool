@@ -6,7 +6,7 @@
  *  @copyright 2023 Eero Kaan
  */
 
-package de.eerokaan.mpbt;
+package de.eerokaan.mpbt.core;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -21,7 +21,6 @@ import com.google.re2j.*;
 import org.apache.commons.vfs2.*;
 import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
 import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
-import com.jcraft.jsch.*;
 
 public class Helper {
     public static String generateRandomString() {
@@ -113,8 +112,8 @@ public class Helper {
             FileObject resource = fsManager.resolveFile(pathRaw, fsOptions);
 
             if (resource.exists()) {
-                String pathBase = new URI(resource.getParent().toString()).getPath();
-                String pathLastDir = new URI(resource.getName().toString()).getPath().replace(pathBase + "/", "");
+                String pathBase = new URI(resource.getParent().toString()).getPath(); // /etc
+                String pathLastDir = new URI(resource.getName().toString()).getPath().replace(pathBase + "/", ""); // hosts
 
                 returnMap.put("pathBase", pathBase);
                 returnMap.put("pathLastDir", pathLastDir);
@@ -273,9 +272,6 @@ public class Helper {
             // Create Database Dump
             if (environment.equals("plain")) {
                 Helper.shellExecuteCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
-            }
-            else if (environment.equals("plesk")) {
-                Helper.shellExecuteCommand(remotePrefixCommand + remoteQuotationMarks + "plesk db dump " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
             }
             else if (environment.equals("lxc")) {
                 Helper.shellExecuteCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);

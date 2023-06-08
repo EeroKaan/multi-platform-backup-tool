@@ -6,29 +6,27 @@
  *  @copyright 2023 Eero Kaan
  */
 
-package de.eerokaan.mpbt;
+package de.eerokaan.mpbt.operation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public abstract class Job {
-    String environment;
-    String tarball;
-    ArrayList<String> jobTypes;
-    HashMap<String, String> directorySpecific;
-    HashMap<String, String> databaseSpecific;
-    HashMap<String, String> elasticsearchSpecific;
+public abstract class Operation {
+    public String sessionString;
+    public String environment;
+    public ArrayList<String> jobTypes;
+    public HashMap<String, String> directorySpecific;
+    public HashMap<String, String> databaseSpecific;
+    public HashMap<String, String> elasticsearchSpecific;
 
-    public Job(
+    public Operation(
         String environment,
-        String tarball,
         ArrayList<String> jobTypes,
         HashMap<String, String> directorySpecific,
         HashMap<String, String> databaseSpecific,
         HashMap<String, String> elasticsearchSpecific
     ) {
         this.environment = environment;
-        this.tarball = tarball;
         this.jobTypes = jobTypes;
         this.directorySpecific = directorySpecific;
         this.databaseSpecific = databaseSpecific;

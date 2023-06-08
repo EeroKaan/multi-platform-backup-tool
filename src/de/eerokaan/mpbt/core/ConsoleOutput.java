@@ -6,18 +6,18 @@
  *  @copyright 2023 Eero Kaan
  */
 
-package de.eerokaan.mpbt;
+package de.eerokaan.mpbt.core;
 
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
 public class ConsoleOutput {
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_WHITE = "\u001B[37m";
-    public static final String ANSI_CYAN = "\u001B[36m";
+    public static String ANSI_RESET = "\u001B[0m";
+    public static String ANSI_RED = "\u001B[31m";
+    public static String ANSI_GREEN = "\u001B[32m";
+    public static String ANSI_YELLOW = "\u001B[33m";
+    public static String ANSI_WHITE = "\u001B[37m";
+    public static String ANSI_CYAN = "\u001B[36m";
     public static boolean debugEnabled = false;
 
     public static void print(String type, String message) {

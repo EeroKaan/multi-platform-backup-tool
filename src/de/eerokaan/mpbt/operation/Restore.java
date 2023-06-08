@@ -6,15 +6,15 @@
  *  @copyright 2023 Eero Kaan
  */
 
-package de.eerokaan.mpbt;
+package de.eerokaan.mpbt.operation;
 
+import de.eerokaan.mpbt.core.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Restore extends Job {
+public class Restore extends Operation {
     public Restore(
         String environment,
-        String tarball,
         ArrayList<String> jobTypes,
         HashMap<String, String> directorySpecific,
         HashMap<String, String> databaseSpecific,
@@ -22,7 +22,6 @@ public class Restore extends Job {
     ) {
         super(
             environment,
-            tarball,
             jobTypes,
             directorySpecific,
             databaseSpecific,
@@ -33,12 +32,7 @@ public class Restore extends Job {
     @Override
     public void start() {
 
-        // ToDo: Currently "local-local" on [plain, plesk] is assumed -> Implement LXD + Local/Remote Combinations
-
-        // Pre-Job Initializations
-        String sessionString = Helper.generateRandomString();
-        Helper.shellExecuteCommand("mkdir /tmp/mpbt-" + sessionString);
-        Helper.shellExecuteCommand("tar -xzf " + this.tarball + " -C /tmp/mpbt-" + sessionString);
+        // ToDo: Implement support for LXC environment
 
         // Restore backup to all specified sources
         if (this.jobTypes.contains("directory")) {
@@ -47,13 +41,13 @@ public class Restore extends Job {
             String pathBase = Helper.pathParseStructure(this.directorySpecific.get("directoryPath")).get("pathBase");
 
             Helper.shellExecuteCommand("rm -rf " + this.directorySpecific.get("directoryPath"));
-            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + sessionString + "/directory_*.tar -C " + pathBase);
+            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + this.sessionString + "/directory_*.tar -C " + pathBase);
         }
 
         if (this.jobTypes.contains("database")) {
             ConsoleOutput.print("message", "Restoring Database...");
 
-            Helper.shellExecuteCommand("mysql -u'" + this.databaseSpecific.get("dbUser") + "' -p'" + this.databaseSpecific.get("dbPassword") + "' -h'" + this.databaseSpecific.get("dbHost") + "' " + this.databaseSpecific.get("dbName") + " < /tmp/mpbt-" + sessionString + "/database_*.sql");
+            Helper.shellExecuteCommand("mysql -u'" + this.databaseSpecific.get("dbUser") + "' -p'" + this.databaseSpecific.get("dbPassword") + "' -h'" + this.databaseSpecific.get("dbHost") + "' " + this.databaseSpecific.get("dbName") + " < /tmp/mpbt-" + this.sessionString + "/database_*.sql");
         }
 
         if (this.jobTypes.contains("elasticsearch")) {
@@ -68,7 +62,7 @@ public class Restore extends Job {
 
             // Delete old path.repo data and replace with contents from backup
             Helper.shellExecuteCommand("rm -rf " + esRepoPath);
-            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + sessionString + "/elasticsearch_*.tar -C " + pathBase);
+            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + this.sessionString + "/elasticsearch_*.tar -C " + pathBase);
 
             // Set correct permissions
             Helper.shellExecuteCommand("chown -R elasticsearch:elasticsearch " + esRepoPath);
@@ -88,8 +82,5 @@ public class Restore extends Job {
             // Delete repository
             Helper.shellExecuteCommand("curl -XDELETE 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo'");
         }
-
-        // Finalize Job
-        Helper.shellExecuteCommand("rm -rf /tmp/mpbt-" + sessionString);
     }
 }

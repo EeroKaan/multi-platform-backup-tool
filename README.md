@@ -1,20 +1,25 @@
 # Multi Platform Backup Tool (MPBT)
 
-The MPBT application enables you to manage backups on different kinds of webdev environments across multiple machines. Currently, servers with `plain`, `plesk` or `lxc` architectures are supported.
+MPBT enables you to manage backups on different kinds of server environments across multiple machines.
 
 ## Features
 
-- Support for backing up and restoring directories, MySQL databases and Elasticsearch instances
-- Support for different machine environments
-    - Plain machines (data is directly accessible)
-    - Plesk machines (data is managed by a Plesk instance)
-    - LXC container machines (data is stored in separate LXC containers)
-- Support for push/pull backup/restore:
-    - Local machine → Local machine
-    - Local machine → Remote machine
-    - Remote machine → Local machine
-    - Remote machine → Remote machine
-- Support for multiple simultaneous jobs
+- Support for operations
+    - backup
+    - restore
+- Support for types
+    - directory
+    - database
+    - elasticsearch
+- Support for environments
+    - plain
+    - lxc
+- Support for directions
+    - local → local
+    - local → remote
+    - remote → local
+    - remote → remote
+- Supports multiple simultaneous jobs
 - Resilient rsync file transfer between machines (auto-resume after connection loss)
 
 ## Usage
@@ -31,15 +36,15 @@ The MPBT application enables you to manage backups on different kinds of webdev 
     </tr>
     <tr>
         <td>--debug</td>
-        <td>Enable debug mode</td>
+        <td>Enable debug output</td>
     </tr>
     <tr>
-        <td>--mode &lt;arg&gt;</td>
-        <td>The mode to use MPBT with<br>[backup, restore]</td>
+        <td>--operation &lt;arg&gt;</td>
+        <td>The operation to use MPBT with<br>[backup, restore]</td>
     </tr>
     <tr>
         <td>--environment &lt;arg&gt;</td>
-        <td>The source environment<br>[plain, plesk, lxc]</td>
+        <td>The source environment<br>[plain, lxc]</td>
     </tr>
     <tr>
         <td colspan="2"><b>Job Types</b></td>
@@ -97,8 +102,8 @@ The MPBT application enables you to manage backups on different kinds of webdev 
 
 ## Requirements
 
-- Java Runtime
-- `mysql-client` or compatible (e.g. `mariadb-client`)
+- Java runtime
+- MySQL client (e.g. `mariadb-client`)
 - Prepared SSH key authentication
 
 ## License

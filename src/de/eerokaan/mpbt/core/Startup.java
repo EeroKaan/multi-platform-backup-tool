@@ -6,11 +6,16 @@
  *  @copyright 2023 Eero Kaan
  */
 
-package de.eerokaan.mpbt;
+package de.eerokaan.mpbt.core;
 
+import de.eerokaan.mpbt.operation.*;
+import de.eerokaan.mpbt.direction.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
+
 import org.apache.commons.cli.*;
 
 public class Startup {
@@ -38,34 +43,36 @@ public class Startup {
             // ToDo: Check if OS binaries are present (mysqldump, rsync, evtl. [bash, zsh, sh], etc.)
             // LOREM
 
-            // Start Job
-            String mode = commandLine.getOptionValue("mode");
+            // Filter Operation/Direction
+            String operationClass = Objects.equals(commandLine.getOptionValue("operation"), "backup") ? "Backup" : "Restore";
 
-            if (mode.equals("backup")) {
-                Job job = new Backup(
-                    commandLine.getOptionValue("environment"),
-                    commandLine.getArgs()[0],
-                    Startup.cliOptionsJobTypes(commandLine),
-                    Startup.cliOptionsDirectorySpecific(commandLine),
-                    Startup.cliOptionsDatabaseSpecific(commandLine),
-                    Startup.cliOptionsElasticsearchSpecific(commandLine)
-                );
-                job.start();
-            }
-            else if (mode.equals("restore")) {
-                Job job = new Restore(
-                    commandLine.getOptionValue("environment"),
-                    commandLine.getArgs()[0],
-                    Startup.cliOptionsJobTypes(commandLine),
-                    Startup.cliOptionsDirectorySpecific(commandLine),
-                    Startup.cliOptionsDatabaseSpecific(commandLine),
-                    Startup.cliOptionsElasticsearchSpecific(commandLine)
-                );
-                job.start();
-            }
+            // Start Job
+            Job job = new Job(
+                commandLine.getArgs()[0],
+                (Operation)Class
+                    .forName("de.eerokaan.mpbt.operation." + operationClass)
+                    .getConstructor(String.class, ArrayList.class, HashMap.class, HashMap.class, HashMap.class)
+                    .newInstance(
+                        commandLine.getOptionValue("environment"),
+                        Startup.cliOptionsJobTypes(commandLine),
+                        Startup.cliOptionsDirectorySpecific(commandLine),
+                        Startup.cliOptionsDatabaseSpecific(commandLine),
+                        Startup.cliOptionsElasticsearchSpecific(commandLine)
+                    ),
+                (Direction)Class
+                    .forName("de.eerokaan.mpbt.direction.")
+                    .getConstructor()
+                    .newInstance()
+            );
+            job.start();
         }
         catch (ParseException exception) {
             ConsoleOutput.print("error", Statics.CLI_PARSE_EXCEPTION);
+            exception.printStackTrace();
+            System.exit(1);
+        }
+        catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException exception) {
+            ConsoleOutput.print("error", Statics.CLI_JOB_EXCEPTION);
             exception.printStackTrace();
             System.exit(1);
         }
@@ -82,15 +89,15 @@ public class Startup {
         );
         cliOptionsMap.put(
             "optionDebug",
-            Option.builder(null).longOpt("debug").desc("Enable debug mode").hasArg(false).build()
+            Option.builder(null).longOpt("debug").desc("Enable debug output").hasArg(false).build()
         );
         cliOptionsMap.put(
-            "optionMode",
-            Option.builder(null).longOpt("mode").desc("The mode to use MPBT with [backup, restore]").hasArg(true).build()
+            "optionOperation",
+            Option.builder(null).longOpt("operation").desc("The operation to use MPBT with [backup, restore]").hasArg(true).build()
         );
         cliOptionsMap.put(
             "optionEnvironment",
-            Option.builder(null).longOpt("environment").desc("The source environment [plain, plesk, lxc]").hasArg(true).build()
+            Option.builder(null).longOpt("environment").desc("The source environment [plain, lxc]").hasArg(true).build()
         );
 
         // CLI Parameters: Job Types
@@ -184,15 +191,15 @@ public class Startup {
             System.exit(1);
         }
 
-        // Mode: Sanity-Check if tasked with backing up or restoring
-        if (!commandLine.hasOption("mode")) {
-            ConsoleOutput.print("error", Statics.CLI_SPECIFY_MODE);
+        // Operation: Sanity-Check if tasked with backing up or restoring
+        if (!commandLine.hasOption("operation")) {
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_OPERATION);
             System.exit(1);
         }
 
-        String mode = commandLine.getOptionValue("mode");
-        if ( !(mode.equals("backup") || mode.equals("restore")) ) {
-            ConsoleOutput.print("error", Statics.CLI_SPECIFY_MODE);
+        String operation = commandLine.getOptionValue("operation");
+        if ( !(operation.equals("backup") || operation.equals("restore")) ) {
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_OPERATION);
             System.exit(1);
         }
 
@@ -203,7 +210,7 @@ public class Startup {
         }
 
         String environment = commandLine.getOptionValue("environment");
-        if ( !(environment.equals("plain") || environment.equals("plesk") || environment.equals("lxc")) ) {
+        if ( !(environment.equals("plain") || environment.equals("lxc")) ) {
             ConsoleOutput.print("error", Statics.CLI_SPECIFY_ENVIRONMENT);
             System.exit(1);
         }
@@ -238,7 +245,7 @@ public class Startup {
             }
         }
         if (commandLine.hasOption("elasticsearch")) {
-            if (mode.equals("restore") && !System.getProperty("user.name").equals("root")) {
+            if (operation.equals("restore") && !System.getProperty("user.name").equals("root")) {
                 ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_USER);
                 System.exit(1);
             }
