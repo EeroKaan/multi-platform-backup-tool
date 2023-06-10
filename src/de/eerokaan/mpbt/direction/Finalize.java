@@ -8,5 +8,5 @@
 
 package de.eerokaan.mpbt.direction;
 
-public class RemoteRemote {
+public class Finalize {
 }

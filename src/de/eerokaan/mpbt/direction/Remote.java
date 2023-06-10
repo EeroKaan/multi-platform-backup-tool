@@ -8,5 +8,5 @@
 
 package de.eerokaan.mpbt.direction;
 
-public class LocalLocal {
+public class Remote {
 }

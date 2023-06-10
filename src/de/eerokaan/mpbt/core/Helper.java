@@ -38,13 +38,15 @@ public class Helper {
         return generatedString;
     }
 
-    public static void shellExecuteCommand(String command) {
+    public static String shellExecuteCommand(String command, boolean stdoutToConsole, boolean stdoutToReturn) {
         ConsoleOutput.print("debug", command);
 
+        // Initialize
         StringBuilder stringBuilder = new StringBuilder();
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command("bash", "-c", command);
 
+        // Interface with external program
         try {
             String currentLine;
             Process process = processBuilder.start();
@@ -53,7 +55,6 @@ public class Helper {
             while ((currentLine = bufferedReader.readLine()) != null) {
                 stringBuilder.append(currentLine + "\n");
             }
-
             if (process.waitFor() != 0) {
                 ConsoleOutput.print("warning", Statics.EXTERNAL_PROGRAM_UNEXPECTED_CLOSE);
             }
@@ -65,12 +66,22 @@ public class Helper {
             exception.printStackTrace();
         }
 
+        // Return stage
+        String returnValue = null;
+
         if (stringBuilder.toString().length() > 0) {
-            ConsoleOutput.print("message", stringBuilder.toString());
+            if (stdoutToConsole) {
+                ConsoleOutput.print("message", stringBuilder.toString());
+            }
+            if (stdoutToReturn) {
+                returnValue = stringBuilder.toString();
+            }
         }
+
+        return returnValue;
     }
 
-    public static String shellSearchLocalFileByKey(String filePath, String searchKey) {
+    /*public static String shellSearchLocalFileByKey(String filePath, String searchKey) {
         String searchResult = null;
 
         try {
@@ -91,9 +102,59 @@ public class Helper {
         }
 
         return searchResult;
+    }*/
+
+    public static String parseFileByKey(String filePath, String searchKey) {
+
+        // ToDo: Check if file is remote -> Issue SSH Login before if true
+
+        Helper.shellExecuteCommand("grep -oP '(?<=" + searchKey + ").*' " + filePath, false, true);
     }
 
-    public static HashMap<String, String> pathParseStructure(String pathRaw) {
+    public static HashMap<String, String> parseResourceProperties(String resource) {
+        HashMap<String, String> returnMap = new HashMap<String, String>();
+
+        // Define RegEx pattern
+        Pattern pattern = Pattern.compile("^(?:(?P<user>[\\w.-]+)\\@(?P<host>[\\w.-]+):)?(?P<port>\\d+)?:?(?P<container0>lxc%[\\w.-]+)?:?(?P<path0>\\/\\S+)$|^(?P<container1>lxc%[\\w.-]+):(?P<path1>\\/\\S+)$");
+        Matcher matcher = pattern.matcher(resource);
+        boolean patternMatches = matcher.find();
+
+        // Filter capture groups digestible for RE2J
+        String user = matcher.group("user");
+        String host = matcher.group("host");
+        String port = matcher.group("port");
+        String container0 = matcher.group("container0");
+        String container1 = matcher.group("container1");
+        String path0 = matcher.group("path0");
+        String path1 = matcher.group("path1");
+
+        String container = (container0 != null ? container0 : container1).replaceAll("lxc%", "");
+        String path = path0 != null ? path0 : path1;
+
+        // Process path only on String level
+        String pathBase = null;
+        String pathTail = null;
+
+        if (path != null && !path.isEmpty()) {
+            pathBase = path.substring(0, path.lastIndexOf("/"));
+            pathTail = path.substring(path.lastIndexOf("/") + 1);
+        }
+
+        // If RegEx matches: Return appropriate data
+        if (patternMatches) {
+            returnMap.put("user", user);
+            returnMap.put("host", host);
+            returnMap.put("port", port);
+            returnMap.put("container", container);
+            returnMap.put("path", path);
+            returnMap.put("pathBase", pathBase);
+            returnMap.put("pathTail", pathTail);
+        }
+
+        return returnMap;
+    }
+
+    /*public static HashMap<String, String> pathParseStructure(String pathRaw) {
         HashMap<String, String> returnMap = new HashMap<String, String>();
 
         // Precondition pathRaw if remote
@@ -139,6 +200,8 @@ public class Helper {
 
         // Process resource
         try {
+            // ToDo: Wie oben "SftpFileSystemConfigBuilder" einbauen
+
             FileSystemManager fsManager = VFS.getManager();
             FileObject resource = fsManager.resolveFile(pathRaw);
 
@@ -173,109 +236,5 @@ public class Helper {
         }
 
         return returnMap;
-    }
-
-    public static boolean resourceIsRemote(String resource) {
-        boolean returnValue = false;
-
-        Pattern pattern = Pattern.compile("^(?P<user>.*?)@(?P<host>.*?):(?:(?P<port>.*?)/)?(?P<path>.*?/.*?)$");
-        if (pattern.matcher(resource).find()) {returnValue = true;}
-
-        return returnValue;
-    }
-
-    /*public static String rsyncResilienceWrapper(String rsyncRawCommand) {
-        return "MAX_RETRIES=10;iterationCounter=0;false;while [ $? -ne 0 -a $iterationCounter -lt $MAX_RETRIES ];do iterationCounter=$(($iterationCounter+1));" + rsyncRawCommand + ";sleep 30;done;if [ $iterationCounter -eq $MAX_RETRIES ];then echo \"Reached max Retries. Aborting.\";fi";
-    }*/
-
-    /*public static String extractFromRemoteResource(String dataType, String remoteResource) {
-        String outputString = "";
-
-        Pattern pattern = Pattern.compile("^(?P<user>.*?)@(?P<host>.*?):(?:(?P<port>.*?)/)?(?P<path>.*?/.*?)$");
-        Matcher matcher = pattern.matcher(remoteResource);
-
-        String remoteUser = "";
-        String remoteHost = "";
-        String remotePort = "";
-        String remotePath = "";
-
-        if (matcher.find()) {
-            remoteUser = matcher.group("user");
-            remoteHost = matcher.group("host");
-            remotePort = matcher.group("port");
-            if (remotePort.equals("")) { remotePort = "22"; }
-            remotePath = matcher.group("path");
-        }
-
-        if (dataType.equals("user")) { outputString = remoteUser; }
-        if (dataType.equals("host")) { outputString = remoteHost; }
-        if (dataType.equals("port")) { outputString = remotePort; }
-        if (dataType.equals("path")) { outputString = remotePath; }
-
-        return outputString;
-    }*/
-
-    /*public static String escapeSpecialCharacters(String rawString) {
-        return rawString.replace("!", "\\!")
-            .replace("#", "\\#")
-            .replace("$", "\\$")
-            .replace("&", "\\&")
-            .replace("(", "\\(")
-            .replace(")", "\\)")
-            .replace("*", "\\*")
-            .replace(",", "\\,")
-            .replace(";", "\\;")
-            .replace("<", "\\<")
-            .replace(">", "\\>")
-            .replace("?", "\\?")
-            .replace("[", "\\[")
-            .replace("]", "\\]")
-            .replace("^", "\\^")
-            .replace("`", "\\`")
-            .replace("{", "\\{")
-            .replace("}", "\\}")
-            .replace("|", "\\|")
-            .replace("'", "\\'")
-            .replace("\"", "\\\"");
-    }*/
-
-    /*public static void dumpDatabaseToRespectiveTmp(
-        String environment,
-        boolean directoryInputIsRemote,
-        String sessionString,
-        String lxcContainerName,
-        String databaseHost,
-        String databaseName,
-        String databaseUser,
-        String databasePassword,
-        String remoteUser,
-        String remoteHost,
-        String remotePort
-    ) {
-        if (
-            !databaseHost.isEmpty() &&
-            !databaseName.isEmpty() &&
-            !databaseUser.isEmpty() &&
-            !databasePassword.isEmpty()
-        ) {
-            // Remote Machine Command Filters
-            String remotePrefixCommand = "";
-            String remoteQuotationMarks = "";
-
-            if (directoryInputIsRemote) {
-                remotePrefixCommand = "ssh -p " + remotePort + " " + remoteUser + "@" + remoteHost + " ";
-
-                if (environment.equals("lxc")) {remoteQuotationMarks = "'";}
-                else {remoteQuotationMarks = "\"";}
-            }
-
-            // Create Database Dump
-            if (environment.equals("plain")) {
-                Helper.shellExecuteCommand(remotePrefixCommand + remoteQuotationMarks + "mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql" + remoteQuotationMarks);
-            }
-            else if (environment.equals("lxc")) {
-                Helper.shellExecuteCommand(remotePrefixCommand + remoteQuotationMarks + "lxc exec " + lxcContainerName + " -- bash -c \"mysqldump --opt --no-tablespaces -u'" + databaseUser + "' -p'" + databasePassword + "' -h'" + databaseHost + "' " + databaseName + " > /tmp/mpbt-dbdump-" + sessionString + ".sql\"" + remoteQuotationMarks);
-            }
-        }
     }*/
 }

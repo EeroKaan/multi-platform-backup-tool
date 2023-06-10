@@ -9,17 +9,17 @@
 package de.eerokaan.mpbt.core;
 
 import de.eerokaan.mpbt.operation.*;
-import de.eerokaan.mpbt.direction.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
-
 import org.apache.commons.cli.*;
 
 public class Startup {
     public static void main(String[] args) {
+
+        Helper.parseResourceProperties("root@machine.com:/var/log/my/file/is/here.log");
 
         // Check OS
         if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
@@ -43,26 +43,24 @@ public class Startup {
             // ToDo: Check if OS binaries are present (mysqldump, rsync, evtl. [bash, zsh, sh], etc.)
             // LOREM
 
-            // Filter Operation/Direction
+            // Start Job
             String operationClass = Objects.equals(commandLine.getOptionValue("operation"), "backup") ? "Backup" : "Restore";
 
-            // Start Job
             Job job = new Job(
                 commandLine.getArgs()[0],
+                Startup.cliOptionsJobResources(commandLine),
                 (Operation)Class
                     .forName("de.eerokaan.mpbt.operation." + operationClass)
-                    .getConstructor(String.class, ArrayList.class, HashMap.class, HashMap.class, HashMap.class)
+                    .getConstructor(
+                        HashMap.class,
+                        HashMap.class,
+                        HashMap.class
+                    )
                     .newInstance(
-                        commandLine.getOptionValue("environment"),
-                        Startup.cliOptionsJobTypes(commandLine),
                         Startup.cliOptionsDirectorySpecific(commandLine),
                         Startup.cliOptionsDatabaseSpecific(commandLine),
                         Startup.cliOptionsElasticsearchSpecific(commandLine)
-                    ),
-                (Direction)Class
-                    .forName("de.eerokaan.mpbt.direction.")
-                    .getConstructor()
-                    .newInstance()
+                    )
             );
             job.start();
         }
@@ -95,10 +93,6 @@ public class Startup {
             "optionOperation",
             Option.builder(null).longOpt("operation").desc("The operation to use MPBT with [backup, restore]").hasArg(true).build()
         );
-        cliOptionsMap.put(
-            "optionEnvironment",
-            Option.builder(null).longOpt("environment").desc("The source environment [plain, lxc]").hasArg(true).build()
-        );
 
         // CLI Parameters: Job Types
         cliOptionsMap.put(
@@ -116,8 +110,8 @@ public class Startup {
 
         // CLI Parameters: Directory specific
         cliOptionsMap.put(
-            "optionDirectoryPath",
-            Option.builder(null).longOpt("directoryPath").desc("The directory to backup/restore").hasArg(true).build()
+            "optiondirPath",
+            Option.builder(null).longOpt("dirPath").desc("The directory to backup/restore").hasArg(true).build()
         );
 
         // CLI Parameters: Database specific
@@ -203,25 +197,13 @@ public class Startup {
             System.exit(1);
         }
 
-        // Environment: Sanity-Check which environment to use
-        if (!commandLine.hasOption("environment")) {
-            ConsoleOutput.print("error", Statics.CLI_SPECIFY_ENVIRONMENT);
-            System.exit(1);
-        }
-
-        String environment = commandLine.getOptionValue("environment");
-        if ( !(environment.equals("plain") || environment.equals("lxc")) ) {
-            ConsoleOutput.print("error", Statics.CLI_SPECIFY_ENVIRONMENT);
-            System.exit(1);
-        }
-
-        // Job Types: Sanity-Check types
+        // Job Types: Sanity-Check resources
         if (!commandLine.hasOption("directory") && !commandLine.hasOption("database") && !commandLine.hasOption("elasticsearch")) {
-            ConsoleOutput.print("error", Statics.CLI_SPECIFY_TYPE);
+            ConsoleOutput.print("error", Statics.CLI_SPECIFY_RESOURCE);
             System.exit(1);
         }
         if (commandLine.hasOption("directory")) {
-            if (!commandLine.hasOption("directoryPath")) {
+            if (!commandLine.hasOption("dirPath")) {
                 ConsoleOutput.print("error", Statics.CLI_SPECIFY_DIRECTORY_PATH);
                 System.exit(1);
             }
@@ -268,7 +250,7 @@ public class Startup {
         }
     }
 
-    private static ArrayList<String> cliOptionsJobTypes(CommandLine commandLine) {
+    private static ArrayList<String> cliOptionsJobResources(CommandLine commandLine) {
         ArrayList<String> jobTypes = new ArrayList<String>();
 
         if (commandLine.hasOption("directory")) {
@@ -288,10 +270,10 @@ public class Startup {
         HashMap<String, String> specificsMap = new HashMap<String, String>();
 
         if (commandLine.hasOption("directory")) {
-            if (commandLine.hasOption("directoryPath")) {
+            if (commandLine.hasOption("dirPath")) {
                 specificsMap.put(
-                    "directoryPath",
-                    commandLine.getOptionValue("directoryPath")
+                    "dirPath",
+                    commandLine.getOptionValue("dirPath")
                 );
             }
         }

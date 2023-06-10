@@ -9,20 +9,15 @@
 package de.eerokaan.mpbt.operation;
 
 import de.eerokaan.mpbt.core.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Restore extends Operation {
     public Restore(
-        String environment,
-        ArrayList<String> jobTypes,
         HashMap<String, String> directorySpecific,
         HashMap<String, String> databaseSpecific,
         HashMap<String, String> elasticsearchSpecific
     ) {
         super(
-            environment,
-            jobTypes,
             directorySpecific,
             databaseSpecific,
             elasticsearchSpecific
@@ -30,57 +25,53 @@ public class Restore extends Operation {
     }
 
     @Override
-    public void start() {
+    public void processDirectory() {
+        ConsoleOutput.print("message", "Restoring Directory...");
 
-        // ToDo: Implement support for LXC environment
+        String pathBase = Helper.parseResourceProperties(this.directorySpecific.get("dirPath")).get("pathBase");
 
-        // Restore backup to all specified sources
-        if (this.jobTypes.contains("directory")) {
-            ConsoleOutput.print("message", "Restoring Directory...");
+        Helper.shellExecuteCommand("rm -rf " + this.directorySpecific.get("dirPath"), true, false);
+        Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + this.sessionString + "/directory_*.tar -C " + pathBase, true, false);
+    }
 
-            String pathBase = Helper.pathParseStructure(this.directorySpecific.get("directoryPath")).get("pathBase");
+    @Override
+    public void processDatabase() {
+        ConsoleOutput.print("message", "Restoring Database...");
 
-            Helper.shellExecuteCommand("rm -rf " + this.directorySpecific.get("directoryPath"));
-            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + this.sessionString + "/directory_*.tar -C " + pathBase);
-        }
+        Helper.shellExecuteCommand("mysql -u'" + this.databaseSpecific.get("dbUser") + "' -p'" + this.databaseSpecific.get("dbPassword") + "' -h'" + this.databaseSpecific.get("dbHost") + "' " + this.databaseSpecific.get("dbName") + " < /tmp/mpbt-" + this.sessionString + "/database_*.sql", true, false);
+    }
 
-        if (this.jobTypes.contains("database")) {
-            ConsoleOutput.print("message", "Restoring Database...");
+    @Override
+    public void processElasticsearch() {
+        ConsoleOutput.print("message", "Restoring Elasticsearch...");
 
-            Helper.shellExecuteCommand("mysql -u'" + this.databaseSpecific.get("dbUser") + "' -p'" + this.databaseSpecific.get("dbPassword") + "' -h'" + this.databaseSpecific.get("dbHost") + "' " + this.databaseSpecific.get("dbName") + " < /tmp/mpbt-" + this.sessionString + "/database_*.sql");
-        }
+        // Initialize Paths
+        String esRepoPath = Helper.shellSearchLocalFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ");
+        String pathBase = Helper.parseResourceProperties(esRepoPath).get("pathBase");
 
-        if (this.jobTypes.contains("elasticsearch")) {
-            ConsoleOutput.print("message", "Restoring Elasticsearch...");
+        // Stop Elasticsearch service
+        Helper.shellExecuteCommand("service elasticsearch stop", true, false);
 
-            // Initialize Paths
-            String esRepoPath = Helper.shellSearchLocalFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ");
-            String pathBase = Helper.pathParseStructure(esRepoPath).get("pathBase");
+        // Delete old path.repo data and replace with contents from backup
+        Helper.shellExecuteCommand("rm -rf " + esRepoPath, true, false);
+        Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + this.sessionString + "/elasticsearch_*.tar -C " + pathBase, true, false);
 
-            // Stop Elasticsearch service
-            Helper.shellExecuteCommand("service elasticsearch stop");
+        // Set correct permissions
+        Helper.shellExecuteCommand("chown -R elasticsearch:elasticsearch " + esRepoPath, true, false);
 
-            // Delete old path.repo data and replace with contents from backup
-            Helper.shellExecuteCommand("rm -rf " + esRepoPath);
-            Helper.shellExecuteCommand("tar -xf /tmp/mpbt-" + this.sessionString + "/elasticsearch_*.tar -C " + pathBase);
+        // Restart Elasticsearch service
+        Helper.shellExecuteCommand("service elasticsearch start", true, false);
 
-            // Set correct permissions
-            Helper.shellExecuteCommand("chown -R elasticsearch:elasticsearch " + esRepoPath);
+        // Create Elasticsearch repository
+        Helper.shellExecuteCommand("curl -XPUT -H 'content-type:application/json' 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo' -d '{\"type\":\"fs\",\"settings\":{\"location\":\"" + esRepoPath + "\",\"compress\":true}}'", true, false);
 
-            // Restart Elasticsearch service
-            Helper.shellExecuteCommand("service elasticsearch start");
+        // Restore from snapshot
+        Helper.shellExecuteCommand("curl -XPOST 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo/snapshot/_restore?wait_for_completion=true'", true, false);
 
-            // Create Elasticsearch repository
-            Helper.shellExecuteCommand("curl -XPUT -H 'content-type:application/json' 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo' -d '{\"type\":\"fs\",\"settings\":{\"location\":\"" + esRepoPath + "\",\"compress\":true}}'");
+        // Delete snapshot
+        Helper.shellExecuteCommand("curl -XDELETE 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo/snapshot'", true, false);
 
-            // Restore from snapshot
-            Helper.shellExecuteCommand("curl -XPOST 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo/snapshot/_restore?wait_for_completion=true'");
-
-            // Delete snapshot
-            Helper.shellExecuteCommand("curl -XDELETE 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo/snapshot'");
-
-            // Delete repository
-            Helper.shellExecuteCommand("curl -XDELETE 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo'");
-        }
+        // Delete repository
+        Helper.shellExecuteCommand("curl -XDELETE 'http://" + this.elasticsearchSpecific.get("esHost") + ":9200/_snapshot/mpbt-repo'", true, false);
     }
 }

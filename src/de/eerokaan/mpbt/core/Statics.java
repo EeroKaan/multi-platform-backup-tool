@@ -27,8 +27,7 @@ public class Statics {
     public static String CLI_SPECIFY_TARBALL = "Please specify a valid tarball where to write to (backup) or where to read from (restore)!";
     public static String CLI_SPECIFY_TARBALL_AS_FILE = "Please specify a valid tarball (A file, not a directory)!";
     public static String CLI_SPECIFY_OPERATION = "Please specify a valid operation!";
-    public static String CLI_SPECIFY_ENVIRONMENT = "Please supply a valid environment!";
-    public static String CLI_SPECIFY_TYPE = "Please specify at least one backup/restore type!";
+    public static String CLI_SPECIFY_RESOURCE = "Please specify at least one backup/restore resource!";
     public static String CLI_SPECIFY_DIRECTORY_PATH = "Please specify a directory which should be backup up/restored!";
     public static String CLI_SPECIFY_DATABASE_HOST = "Please specify the database host address!";
     public static String CLI_SPECIFY_DATABASE_NAME = "Please specify the database name!";
