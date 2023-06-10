@@ -10,35 +10,32 @@ package de.eerokaan.mpbt.core;
 
 import java.util.HashMap;
 import java.util.Random;
-import java.io.File;
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
 import com.google.re2j.*;
-import org.apache.commons.vfs2.*;
-import org.apache.commons.vfs2.provider.sftp.IdentityInfo;
-import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 
 public class Helper {
     public static String generateRandomString() {
+
+        // Initialize
         int leftLimit = 48; // Number "0"
         int rightLimit = 122; // Letter "z"
         int targetStringLength = 8;
         Random random = new Random();
 
+        // Process
         String generatedString = random.ints(leftLimit, rightLimit + 1)
             .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
             .limit(targetStringLength)
             .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
             .toString();
 
+        // Return stage
         return generatedString;
     }
 
-    public static String shellExecuteCommand(String command, boolean stdoutToConsole, boolean stdoutToReturn) {
+    public static String commandExecute(String command, boolean stdoutToConsole, boolean stdoutToReturn) {
         ConsoleOutput.print("debug", command);
 
         // Initialize
@@ -81,37 +78,44 @@ public class Helper {
         return returnValue;
     }
 
-    /*public static String shellSearchLocalFileByKey(String filePath, String searchKey) {
-        String searchResult = null;
+    public static String[] commandWrapper(String resource) {
 
-        try {
-            String currentLine;
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath));
+        // Initialize
+        HashMap<String, String> resourceStructure = Helper.parseResourceStructure(resource);
 
-            while ((currentLine = bufferedReader.readLine()) != null) {
-                if (currentLine.contains(searchKey)) {
-                    searchResult = currentLine.substring(searchKey.length());
-                }
-            }
+        String[] wrapper = new String[2];
+        String commandPrefix = "";
+        String commandSuffix = "";
 
-            bufferedReader.close();
-        }
-        catch (IOException exception) {
-            ConsoleOutput.print("error", Statics.GENERIC_ERROR);
-            exception.printStackTrace();
+        // Wrapper for SSH connection
+        if ((resourceStructure.get("user") != null) && (resourceStructure.get("host") != null)) {
+            commandPrefix = commandPrefix + "ssh -p " + resourceStructure.get("port") + " " + resourceStructure.get("user") + "@" + resourceStructure.get("host") + " '";
+            commandSuffix = "'" + commandSuffix;
         }
 
-        return searchResult;
-    }*/
+        // Wrapper for LXC containers
+        if (resourceStructure.get("container") != null) {
+            commandPrefix = commandPrefix + "lxc exec " + resourceStructure.get("container") + " -- bash -c \"";
+            commandSuffix = "\"" + commandSuffix;
+        }
 
-    public static String parseFileByKey(String filePath, String searchKey) {
-
-        // ToDo: Check if file is remote -> Issue SSH Login before if true
-
-        Helper.shellExecuteCommand("grep -oP '(?<=" + searchKey + ").*' " + filePath, false, true);
+        // Return stage
+        wrapper[0] = commandPrefix;
+        wrapper[1] = commandSuffix;
+        return wrapper;
     }
 
-    public static HashMap<String, String> parseResourceProperties(String resource) {
+    public static String parseResourceByKey(String resource, String searchKey) {
+
+        // Initialize
+        String[] cmdWrapper = Helper.commandWrapper(resource);
+        HashMap<String, String> resourceStructure = Helper.parseResourceStructure(resource);
+
+        // Return stage
+        return Helper.commandExecute(cmdWrapper[0] + "grep -oP '(?<=" + searchKey + ").*' " + resourceStructure.get("path") + cmdWrapper[1], false, true);
+    }
+
+    public static HashMap<String, String> parseResourceStructure(String resource) {
         HashMap<String, String> returnMap = new HashMap<String, String>();
 
         // Define RegEx pattern
@@ -120,16 +124,17 @@ public class Helper {
         boolean patternMatches = matcher.find();
 
         // Filter capture groups digestible for RE2J
-        String user = matcher.group("user");
-        String host = matcher.group("host");
-        String port = matcher.group("port");
-        String container0 = matcher.group("container0");
-        String container1 = matcher.group("container1");
-        String path0 = matcher.group("path0");
-        String path1 = matcher.group("path1");
+        String cgUser = matcher.group("user");
+        String cgHost = matcher.group("host");
+        String cgPort = matcher.group("port");
+        String cgContainer0 = matcher.group("container0");
+        String cgContainer1 = matcher.group("container1");
+        String cgPath0 = matcher.group("path0");
+        String cgPath1 = matcher.group("path1");
 
-        String container = (container0 != null ? container0 : container1).replaceAll("lxc%", "");
-        String path = path0 != null ? path0 : path1;
+        String port = cgPort != null ? cgPort : "22";
+        String path = cgPath0 != null ? cgPath0 : cgPath1;
+        String container = cgContainer0 != null ? cgContainer0 : cgContainer1;
 
         // Process path only on String level
         String pathBase = null;
@@ -140,10 +145,15 @@ public class Helper {
             pathTail = path.substring(path.lastIndexOf("/") + 1);
         }
 
+        // Process container
+        if (container != null) {
+            container = container.replaceAll("lxc%", "");
+        }
+
         // If RegEx matches: Return appropriate data
         if (patternMatches) {
-            returnMap.put("user", user);
-            returnMap.put("host", host);
+            returnMap.put("user", cgUser);
+            returnMap.put("host", cgHost);
             returnMap.put("port", port);
             returnMap.put("container", container);
             returnMap.put("path", path);
@@ -154,87 +164,33 @@ public class Helper {
         return returnMap;
     }
 
-    /*public static HashMap<String, String> pathParseStructure(String pathRaw) {
-        HashMap<String, String> returnMap = new HashMap<String, String>();
-
-        // Precondition pathRaw if remote
-        if (Helper.resourceIsRemote(pathRaw)) {
-            pathRaw = "sftp://" + pathRaw.replace(":/", "/");
-        }
-
-        // Process resource
-        try {
-            FileSystemOptions fsOptions = new FileSystemOptions();
-            SftpFileSystemConfigBuilder.getInstance().setStrictHostKeyChecking(fsOptions, "no");
-            SftpFileSystemConfigBuilder.getInstance().setIdentityInfo(fsOptions, new IdentityInfo(new File(System.getProperty("user.home") + "/.ssh/id_ed25519")));
-            SftpFileSystemConfigBuilder.getInstance().setKnownHosts(fsOptions, new File(System.getProperty("user.home") + "/.ssh/known_hosts"));
-
-            FileSystemManager fsManager = VFS.getManager();
-            FileObject resource = fsManager.resolveFile(pathRaw, fsOptions);
-
-            if (resource.exists()) {
-                String pathBase = new URI(resource.getParent().toString()).getPath(); // /etc
-                String pathLastDir = new URI(resource.getName().toString()).getPath().replace(pathBase + "/", ""); // hosts
-
-                returnMap.put("pathBase", pathBase);
-                returnMap.put("pathLastDir", pathLastDir);
-            }
-
-            resource.close();
-        }
-        catch (URISyntaxException | FileSystemException exception) {
-            ConsoleOutput.print("error", Statics.GENERIC_ERROR);
-            exception.printStackTrace();
-        }
-
-        return returnMap;
-    }
-
-    public static HashMap<String, Boolean> pathParseProperties(String pathRaw) {
+    public static HashMap<String, Boolean> parseResourceProperties(String resource) {
         HashMap<String, Boolean> returnMap = new HashMap<String, Boolean>();
 
-        // Precondition pathRaw if remote
-        if (Helper.resourceIsRemote(pathRaw)) {
-            pathRaw = "sftp://" + pathRaw.replace(":/", "/");
+        // Initialize
+        String[] cmdWrapper = Helper.commandWrapper(resource);
+        HashMap<String, String> resourceStructure = Helper.parseResourceStructure(resource);
+
+        returnMap.put("isFile", false);
+        returnMap.put("isReadable", false);
+
+        // Process isFile only on String level
+        Pattern pattern = Pattern.compile(".*\\.[a-zA-Z0-9]+$");
+        Matcher matcher = pattern.matcher(resourceStructure.get("path"));
+        boolean patternMatches = matcher.find();
+
+        if (patternMatches) {
+            returnMap.put("isFile", true);
         }
 
-        // Process resource
-        try {
-            // ToDo: Wie oben "SftpFileSystemConfigBuilder" einbauen
+        // Process isReadable
+        boolean isReadable = Boolean.parseBoolean(Helper.commandExecute(cmdWrapper[0] + "grep -q . " + resourceStructure.get("path") + " && echo 'true' || echo 'false'" + cmdWrapper[1], false, true));
 
-            FileSystemManager fsManager = VFS.getManager();
-            FileObject resource = fsManager.resolveFile(pathRaw);
-
-            // Update attributes if resource exists
-            if (resource.exists()) {
-                returnMap.put("exists", resource.exists());
-                returnMap.put("isReadable", resource.isReadable());
-            }
-            else {
-                returnMap.put("exists", false);
-                returnMap.put("isReadable", false);
-            }
-
-            // Process isDirectory/isFile (even for yet non-existent resources)
-            String resourceName = pathRaw.substring(pathRaw.lastIndexOf("/") + 1);
-            int resourceExtensionIndex = resourceName.lastIndexOf(".");
-
-            if (resourceExtensionIndex > 0 && resourceExtensionIndex < resourceName.length() - 1) {
-                returnMap.put("isDirectory", false);
-                returnMap.put("isFile", true);
-            }
-            else {
-                returnMap.put("isDirectory", true);
-                returnMap.put("isFile", false);
-            }
-
-            resource.close();
-        }
-        catch (FileSystemException exception) {
-            ConsoleOutput.print("error", Statics.GENERIC_ERROR);
-            exception.printStackTrace();
+        if (isReadable) {
+            returnMap.put("isReadable", true);
         }
 
+        // Return stage
         return returnMap;
-    }*/
+    }
 }

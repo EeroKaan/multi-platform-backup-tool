@@ -32,9 +32,9 @@ public class Job {
 
         // Pre-Job initializations
         String sessionString = Helper.generateRandomString();
-        //Helper.shellExecuteCommand("mkdir /tmp/mpbt-" + sessionString);
+        //Helper.commandExecute("mkdir /tmp/mpbt-" + sessionString);
 
-        //if (this.operation instanceof Restore) {Helper.shellExecuteCommand("tar -xzf " + this.tarball + " -C /tmp/mpbt-" + sessionString);}
+        //if (this.operation instanceof Restore) {Helper.commandExecute("tar -xzf " + this.tarball + " -C /tmp/mpbt-" + sessionString);}
 
         // ToDo: Local/Remote
 
@@ -52,7 +52,7 @@ public class Job {
         }
 
         // Finalize job
-        //if (this.operation instanceof Backup) {Helper.shellExecuteCommand("tar -czf " + this.tarball + " -C /tmp/mpbt-" + sessionString + " .");}
-        //Helper.shellExecuteCommand("rm -rf /tmp/mpbt-" + sessionString);
+        //if (this.operation instanceof Backup) {Helper.commandExecute("tar -czf " + this.tarball + " -C /tmp/mpbt-" + sessionString + " .");}
+        //Helper.commandExecute("rm -rf /tmp/mpbt-" + sessionString);
     }
 }

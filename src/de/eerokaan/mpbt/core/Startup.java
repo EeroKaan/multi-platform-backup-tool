@@ -19,8 +19,6 @@ import org.apache.commons.cli.*;
 public class Startup {
     public static void main(String[] args) {
 
-        Helper.parseResourceProperties("root@machine.com:/var/log/my/file/is/here.log");
-
         // Check OS
         if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
             ConsoleOutput.print("error", Statics.CHECK_OS_ERROR);
@@ -180,7 +178,7 @@ public class Startup {
             System.exit(1);
         }
 
-        if (!Helper.pathParseProperties(tarball).get("isFile")) {
+        if (!Helper.parseResourceProperties(tarball).get("isFile")) {
             ConsoleOutput.print("error", Statics.CLI_SPECIFY_TARBALL_AS_FILE);
             System.exit(1);
         }
@@ -202,12 +200,14 @@ public class Startup {
             ConsoleOutput.print("error", Statics.CLI_SPECIFY_RESOURCE);
             System.exit(1);
         }
+
         if (commandLine.hasOption("directory")) {
             if (!commandLine.hasOption("dirPath")) {
                 ConsoleOutput.print("error", Statics.CLI_SPECIFY_DIRECTORY_PATH);
                 System.exit(1);
             }
         }
+
         if (commandLine.hasOption("database")) {
             if (!commandLine.hasOption("dbHost")) {
                 ConsoleOutput.print("error", Statics.CLI_SPECIFY_DATABASE_HOST);
@@ -226,17 +226,10 @@ public class Startup {
                 System.exit(1);
             }
         }
+
         if (commandLine.hasOption("elasticsearch")) {
             if (operation.equals("restore") && !System.getProperty("user.name").equals("root")) {
                 ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_USER);
-                System.exit(1);
-            }
-            if (!Helper.pathParseProperties(Statics.ELASTICSEARCH_CONFIG_PATH).get("isReadable")) {
-                ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_CONFIG_ERROR);
-                System.exit(1);
-            }
-            if (Helper.shellSearchLocalFileByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ").isEmpty()) {
-                ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_REPO_PATH);
                 System.exit(1);
             }
             if (!commandLine.hasOption("esHost")) {
@@ -245,6 +238,19 @@ public class Startup {
             }
             if (!commandLine.hasOption("esIndexPrefix")) {
                 ConsoleOutput.print("error", Statics.CLI_SPECIFY_ELASTICSEARCH_INDEX_PREFIX);
+                System.exit(1);
+            }
+
+            HashMap<String, String> esHostStructure = Helper.parseResourceStructure(commandLine.getOptionValue("esHost"));
+            if (esHostStructure.get("container") != null) {Statics.ELASTICSEARCH_CONFIG_PATH = "lxc%" + esHostStructure.get("container") + ":" + Statics.ELASTICSEARCH_CONFIG_PATH;}
+            if ((esHostStructure.get("user") != null) && (esHostStructure.get("host") != null)) {Statics.ELASTICSEARCH_CONFIG_PATH = esHostStructure.get("user") + "@" + esHostStructure.get("host") + ":" + esHostStructure.get("port") + ":" + Statics.ELASTICSEARCH_CONFIG_PATH;}
+
+            if (!Helper.parseResourceProperties(Statics.ELASTICSEARCH_CONFIG_PATH).get("isReadable")) {
+                ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_CONFIG_ERROR);
+                System.exit(1);
+            }
+            if (Helper.parseResourceByKey(Statics.ELASTICSEARCH_CONFIG_PATH, "path.repo: ").isEmpty()) { // ToDo: Test whether empty "path.repo: " really works
+                ConsoleOutput.print("error", Statics.CHECK_ELASTICSEARCH_REPO_PATH);
                 System.exit(1);
             }
         }

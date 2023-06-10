@@ -33,6 +33,7 @@ public class Statics {
     public static String CLI_SPECIFY_DATABASE_NAME = "Please specify the database name!";
     public static String CLI_SPECIFY_DATABASE_USER = "Please specify the database user!";
     public static String CLI_SPECIFY_DATABASE_PASSWORD = "Please specify the database password!";
+
     public static String CLI_SPECIFY_ELASTICSEARCH_HOST = "Please specify the Elasticsearch host address!";
     public static String CLI_SPECIFY_ELASTICSEARCH_INDEX_PREFIX = "Please specify the Elasticsearch index prefix! Use the wildcard \"*\" to select all indices.";
 }
